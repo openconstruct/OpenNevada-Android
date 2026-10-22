@@ -68,7 +68,19 @@ selection and overlapping input need acceptance checks.
 
 ## Next owners
 
-1. Validate APK 0.1.2 physical menu and gameplay controls on the Air X. Native
+1. Validate APK 0.1.3 direct startup and native rendering on the Air X. The
+   Android preset now skips the installation launcher using the remembered or
+   single registered profile, preserving the game's own New/Continue menu.
+   Missing files and ambiguous selections return to setup; B during startup
+   requests setup. Profile reload, ambiguity and missing-install checks pass.
+   Native rendering no longer requires a Windows hardware report: it logs its
+   first supported original shader package, validates program interfaces, and
+   retains strict existing report selection. This is native policy, not parity.
+   Device cold start logs registered-profile auto launch without a launcher click.
+   New Game reaches original shader package 002 and no longer fails on missing
+   `RendererInfo.txt`. It then exposes the desktop `ffprobe` movie dependency
+   and missing `[Interface] uHUDColor`; ordinary gameplay remains blocked.
+2. Retain the 0.1.2 physical menu and gameplay checks. Native
    input checks exercise launcher Play, menu focus/navigation, accept/cancel,
    confirmation, duplicate configuration and frame-rate-independent look.
    Touch New Game already opens confirmation in the prior device build.
@@ -77,14 +89,14 @@ selection and overlapping input need acceptance checks.
    registered installation. The owner confirms visible D-pad focus. Device
    input reaches New Game confirmation and accepts it; loading then fails on
    the missing desktop `RendererInfo.txt`. Gameplay controls remain unverified.
-2. Resolve the missing owned HUD settings. The start-menu UI becomes visible
+3. Resolve the missing owned HUD settings. The start-menu UI becomes visible
    after loading; that HUD error does not itself prevent start-menu selection.
-3. Trace the six remaining missing references and other loading divergences.
+4. Trace the six remaining missing references and other loading divergences.
    Integrate platform services separately from the Android archive's older
    desktop differences.
-4. Exercise modal behavior, safe disconnect/focus transitions, combat and saves.
-5. Retain the passing owned-installation audits and extend them for each fix.
-6. Test the acceptance sequence on the Air X, then select the next measured
+5. Exercise modal behavior, safe disconnect/focus transitions, combat and saves.
+6. Retain the passing owned-installation audits and extend them for each fix.
+7. Test the acceptance sequence on the Air X, then select the next measured
    loading, memory, rendering, or gameplay failure.
 
 ## Publication boundary

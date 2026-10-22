@@ -10,63 +10,55 @@ are not parity or complete gameplay proof.
 
 ## Installed and observed
 
-APK 0.1.8/code 9 is now installed; the following gameplay observations are from
-the preceding APK 0.1.6/code 7. The owner completed SPECIAL,
-word association, inkblots, tag skills and traits, reaching Doc's farewell at
-VCG01 stage 110, and later stage 200 before the door attempt. Tag/trait selection needed touchscreen input. Save at stage 110
-was written successfully, then selected through the ordinary save browser.
-The owner reported right-stick look stopped while walking still worked; both
-worked after loading. Its cause remains unmeasured; do not claim it fixed.
-
-The owner attempted the exterior door. Android records a LOW_MEMORY process
-exit during Goodsprings preparation, at about 2.1 GB reported PSS. The captured
-log also contains unsupported exterior NIF controller sequence chains. Loading
-that session cannot finish after process death. The post-test stage-110 save is
-retained. Do not erase installation data or overwrite it with a fixture.
-
-Mobile compositor attachment output is active on the device's 1280x720
-A2B10G10R10UnormPack32 scene color. Previous storage-image binding errors are
-absent from the captured resumed-world log. FPS remains unsatisfactory and no
-improvement is quantified. Synthetic exact-half-float attachment readback is a
-separate transport check, not rendering parity.
+APK 0.1.8/code 9 was installed and physically retried. The owner previously
+completed SPECIAL, word association, inkblots, tag skills and traits, reaching
+VCG01 stage 110 and later stage 200. Tag/trait selection used touch; the newer
+controller menu changes still need physical acceptance. A stage-110 save was
+written and restored through the ordinary save browser. Preserve it and the
+registered installation. A transient right-stick failure resolved after reload;
+its cause remains open.
 
 The device has Android 14/API 34, ARM64, about 3.57 GiB physical memory and
 2.5 GiB LZ4 zram, with Turnip Adreno 610. Its 277 private installation files were
 SHA-256 verified against the owner's host install; do not transfer them again.
 
-## Current performance block
+## Measured performance and loading
 
-Prepare APK 0.1.8/code 9. The owner reports about 20 FPS subjectively with bloom
-off, but no measured frame-rate baseline exists. The second exterior attempt
-also ended with Android LOW_MEMORY (PID 22798, about 2.0 GB reported PSS). A
-sample immediately before it had about 1.85 GiB swapped out. The ordinary save
-from stage 110 remains the continuation point.
+APK 0.1.8 enables managed Android optimization and follows owned uGridsToLoad=5,
+selecting 25 cells/2,337 references rather than the previous forced 49/3,683.
+Vulkan confirms 960x540 internal 3D with 1280x720 UI/output. Bloom, blur, double
+vision and exposure adaptation remain disabled. Output conversion stays active.
+The owned grid/render-extent audit and full runtime gate pass.
 
-Concrete source divergences found:
+Device telemetry confirms optimized managed code. Doc's room measured 20–22 FPS;
+sustained 30 FPS is not established. Cold Continue took about 56 seconds to
+restore state and 72 seconds to the first compositor target. These are one-run
+observations, not a controlled performance comparison.
 
-- The runtime forced a minimum 7x7 exterior grid despite the owned default INI
-  requesting 5x5. Remove that artificial floor and let owned uGridsToLoad drive
-  residency through the existing grid resolver. Source identity, spatial
-  admission, collision and continued streaming remain the same owners.
-- The signed Android development export compiled C# with Optimize=false. Enable
-  managed optimization for Android without changing desktop Debug configuration.
-- Apply the owner's selected 0.75 scale to flat-world 3D only: 960x540 internal
-  rendering, 1280x720 UI/output. Restore scale 1 for XR and reject invalid scales.
-- Add opt-in, sparse performance/memory logging and door-loading checkpoints.
-  Report actual managed optimization, FPS/process/physics time, draw calls,
-  managed/Godot/video memory, Linux RSS/swap and source payload cache state.
-  Frame capture stays off; disabled logging does no sampling work.
+The third exterior attempt also ended with Android LOW_MEMORY, reported PSS
+about 2.2 GB, during model preparation and before model-ready/commit. At the last
+350-prototype checkpoint, source payload cache held about 188 MB of its 512 MiB
+budget, managed allocation was about 503 MB and swap about 2.0 GiB. These memory
+counters overlap; do not sum them as separate physical allocations. Loading-phase
+FPS/video counters may be stale while synchronous preparation blocks drawing.
+The cache was not full; reducing its budget alone is not an evidenced fix.
+Unsupported exterior controller sequence chains remain visible.
 
-The owned grid/render-extent audit and full runtime gate pass. The selected
-graph is 25 cells/2,337 references versus the earlier 49/3,683; these counts are
-not device memory or gameplay proof. Vulkan confirms 960x540 internal 3D with
-1280x720 UI/output. Android ExportDebug properties report Optimize=true/net9.0.
-Signed ARM64 export is clean and its v2/v3 signature verifies. Code 9 is
-installed and the startup log confirms optimizedManagedCode=true and world
-scale 0.75/canvas scale 1. Ordinary cold Continue/exterior retry remain necessary
-to establish device performance or an exterior-memory fix. The default source cache is still a
-512 MiB budget; do not equate that budget with measured bytes or reduce it
-without checking the new memory checkpoints.
+## Current diagnostic block
+
+APK 0.1.9/code 10 is installed with data preserved. The opt-in --fps-overlay
+is enabled in its preset. It displays
+engine FPS at the top right on the native-resolution canvas, samples twice per
+second, continues when paused and ignores pointer/controller focus. It neither
+caps FPS nor establishes a performance improvement. Keep the same APK/save when
+comparing the owner's Turnip auto, prefer-sysmem and prefer-gmem settings.
+
+Ordinary NIF material loading currently creates DDS textures repeatedly, and
+animated prototype instances rebuild materials/controllers. Investigate sharing
+immutable texture resources without sharing mutable controller/material state
+or retaining unused resources. This is a source finding, not an implemented
+memory fix. Do not omit scenery, reduce authored texture quality or change
+source residency speculatively.
 
 ## Next divergence owners
 
@@ -83,6 +75,11 @@ without checking the new memory checkpoints.
    open. Preserve visible failures rather than skipping gameplay state.
 
 ## Verification and publication
+
+The FPS overlay passes the selected owned grid/Vulkan audit: native top-right
+bounds at 1280x720 with 960x540 3D, no pointer interception, and numeric engine
+FPS sampling while paused. The full required runtime gate passes. These checks
+do not establish device performance gains.
 
 This block passed Release/Debug builds, formatting/analyzers, the full contract
 and native Godot gate, and selected owned-data diagnostics. Its owned controller

@@ -54,7 +54,7 @@ internal static partial class FalloutExecutableStringTable
             else continue;
             if (!writableObject(U32(candidate, objectAt))) continue;
             var name = literal(U32(candidate, nameAt));
-            if (name is null || !Regex.IsMatch(name, @"^i[A-Z][A-Za-z0-9_]+$", RegexOptions.CultureInvariant)) continue;
+            if (name is null || !Regex.IsMatch(name, @"^[iu][A-Z][A-Za-z0-9_]+(?::[A-Za-z0-9_]+)?$", RegexOptions.CultureInvariant)) continue;
             if (!result.TryAdd(name, value))
                 throw new InvalidDataException($"Multiple source initializers declare {name}.");
         }

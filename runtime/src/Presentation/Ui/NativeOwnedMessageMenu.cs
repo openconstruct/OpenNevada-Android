@@ -160,7 +160,7 @@ internal sealed class NativeOwnedMenuTree
         if (!float.IsFinite(backgroundOpacity) || backgroundOpacity is < 0 or > 1)
             throw new InvalidDataException("Owned menu background opacity is outside its unit interval.");
         Bind(_globals, "_background_fill_alpha", backgroundOpacity * 255);
-        var color = _settings.Unsigned("Interface", "uHUDColor");
+        var color = _settings.InterfaceColor("HUDMain");
         Color = new Color((color >> 24) / 255.0f, ((color >> 16) & 255) / 255.0f, ((color >> 8) & 255) / 255.0f);
     }
     internal void Bind(XElement tile, string trait, float value) => _values[(tile, trait)] = value;

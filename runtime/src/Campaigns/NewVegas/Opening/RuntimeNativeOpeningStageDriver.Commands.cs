@@ -111,6 +111,12 @@ internal partial class RuntimeNativeOpeningStageDriver
             case "playbink" when parts.Length == 1:
                 if (_moviePlaying) throw new InvalidOperationException("Movie player is already active.");
                 var movieCommand = FalloutMovieCommand.FromScript(command + " " + string.Join(' ', arguments)).Single();
+                if (OS.GetCmdlineUserArgs().Contains("--skip-cutscenes", StringComparer.Ordinal))
+                {
+                    GD.Print($"OPENNV_MOVIE_SKIPPED source={movieCommand.FileName} policy=explicit-skip-cutscenes playback=false");
+                    Callable.From(() => CompleteBlocker("playbink")).CallDeferred();
+                    break;
+                }
                 var movie = new NativeGamebryoMovie();
                 _moviePlaying = true;
                 movie.Configure(movieCommand, _ => Callable.From(() =>

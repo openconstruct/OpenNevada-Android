@@ -7,6 +7,7 @@ internal sealed class FalloutInstallationSettings
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<RuntimeLiveContentSource, FalloutInstallationSettings> Instances = new();
     private readonly Dictionary<string, string> _values = new(StringComparer.OrdinalIgnoreCase);
     private Lazy<IReadOnlyDictionary<string, float>> _floatDefaults = null!;
+    private Lazy<IReadOnlyDictionary<string, uint>> _integerDefaults = null!;
     private Lazy<FalloutRendererConfiguration?> _renderer = null!;
     internal FalloutRendererConfiguration? Renderer => _renderer.Value;
 
@@ -16,6 +17,9 @@ internal sealed class FalloutInstallationSettings
     {
         var settings = new FalloutInstallationSettings();
         settings._floatDefaults = new(() => FalloutExecutableStringTable.ReadFloatDefaults(
+            Path.Combine(Path.GetDirectoryName(source.ContentRoot)!,
+                source.Game == RuntimeLiveContentSource.FalloutNewVegasGame ? "FalloutNV.exe" : "Fallout3.exe")));
+        settings._integerDefaults = new(() => FalloutExecutableStringTable.ReadIntegerDefaults(
             Path.Combine(Path.GetDirectoryName(source.ContentRoot)!,
                 source.Game == RuntimeLiveContentSource.FalloutNewVegasGame ? "FalloutNV.exe" : "Fallout3.exe")));
         settings.Add(Path.Combine(Path.GetDirectoryName(source.ContentRoot)!, "Fallout_default.ini"), true);
@@ -37,7 +41,28 @@ internal sealed class FalloutInstallationSettings
         return _floatDefaults.Value.TryGetValue(key + ":" + section, out var number)
             ? number : throw new NotSupportedException($"Owned float setting has no admitted default: [{section}] {key}.");
     }
-    internal uint Unsigned(string section, string key) => uint.Parse(Require(section, key), CultureInfo.InvariantCulture);
+    internal uint Unsigned(string section, string key)
+    {
+        if (_values.TryGetValue(section + "/" + key, out var value)) return uint.Parse(value, CultureInfo.InvariantCulture);
+        return _integerDefaults.Value.TryGetValue(key + ":" + section, out var number)
+            ? number : throw new NotSupportedException($"Owned integer setting has no admitted default: [{section}] {key}.");
+    }
+
+    // Native UI policy: an unset custom HUD color uses the installation's
+    // named system channels. Matched retail color-selection proof is open.
+    internal uint InterfaceColor(string systemColor)
+    {
+        var custom = Unsigned("Interface", "uHUDColor");
+        if (custom != 0) return custom;
+        uint Channel(string channel)
+        {
+            var value = Number("Interface", "iSystemColor" + systemColor + channel);
+            if (!float.IsFinite(value) || value is < 0 or > 255 || value != MathF.Truncate(value))
+                throw new InvalidDataException("Owned interface color channel is not a byte.");
+            return (uint)value;
+        }
+        return Channel("Red") << 24 | Channel("Green") << 16 | Channel("Blue") << 8 | 255;
+    }
     internal bool Contains(string section, string key) => _values.ContainsKey(section + "/" + key);
     internal float Number(string identity)
     {

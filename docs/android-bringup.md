@@ -151,3 +151,21 @@ after the sequence works. A rendered menu or desktop probe is not this acceptanc
 
 Retail data remains read-only and external. Packages include no game data or
 saves. The shared C# gameplay/save owners remain authoritative.
+
+## Gameplay testing without cutscenes
+
+The owner has deferred cutscenes in favor of gameplay and content. APK 0.1.4
+(code 5) passes `--skip-cutscenes` in the Android experimental preset. The shared
+PlayBink owner validates the command, logs `OPENNV_MOVIE_SKIPPED` with its source
+and policy, and releases the script's movie blocker through the existing deferred
+continuation. It does not invoke codec helpers or modify the movie file. Desktop
+presets retain playback. This deliberately omits cutscenes; it is not a decoder
+fix or original cutscene timing proof.
+
+Unsigned installation settings now read their original executable defaults when
+no INI override exists. Admitted typed initializers retain their section, DWORD
+bits, writable receiver and ambiguity checks. Native UI treats a zero custom HUD
+color as unset and uses named system channels from the installation INI. This is
+an explicit native backend policy; matched retail color selection is unverified.
+The owned `--audit-interface-settings <installation>` probe checks that both HUD
+and main-menu colors retain their selected source channels.

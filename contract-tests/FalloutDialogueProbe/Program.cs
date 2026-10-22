@@ -36,6 +36,28 @@ FloatInitializerContracts.Run();
 BodyPartLookProbe.Run();
 HeadTrackingProbe.Run();
 
+if (args is ["--audit-interface-settings", var interfaceRoot])
+{
+    RuntimeLiveContentSource.Configure(interfaceRoot, RuntimeLiveContentSource.FalloutNewVegasGame);
+    using var source = RuntimeLiveContentSource.Current!;
+    var settings = FalloutInstallationSettings.Read(source);
+    var custom = settings.Unsigned("Interface", "uHUDColor");
+    foreach (var name in new[] { "HUDMain", "MainMenu" })
+    {
+        var packed = settings.InterfaceColor(name);
+        if (custom != 0) Require(packed == custom, "Custom interface color was replaced.");
+        else
+        {
+            Require((packed >> 24) == settings.Number("Interface", "iSystemColor" + name + "Red") &&
+                ((packed >> 16) & 255) == settings.Number("Interface", "iSystemColor" + name + "Green") &&
+                ((packed >> 8) & 255) == settings.Number("Interface", "iSystemColor" + name + "Blue"),
+                "Native interface policy lost owned system channels.");
+        }
+        Console.WriteLine($"OPENNV_OWNED_INTERFACE_SETTINGS_PASS system={name} custom={custom} color={packed:x8} policy=native-system-channels-when-unset retailParity=unverified");
+    }
+    return;
+}
+
 if (args is ["--audit-look-sources", var lookRoot])
 {
     RuntimeLiveContentSource.Configure(lookRoot, RuntimeLiveContentSource.FalloutNewVegasGame);
@@ -210,6 +232,12 @@ BinaryPrimitives.WriteUInt32LittleEndian(integerInitializer.AsSpan(4), 0xff12a0e
 var integerDefaults = FalloutExecutableStringTable.ReadIntegerInitializers(integerInitializer,
     address => address == 0x100 ? "iArbitraryInteger" : null, address => address == 0x300);
 Require(integerDefaults["iArbitraryInteger"] == 0xff12a0e7, "Integer default lost its immediate source bits.");
+Require(FalloutExecutableStringTable.ReadIntegerInitializers(integerInitializer,
+    _ => "uArbitraryColor:Interface", address => address == 0x300)["uArbitraryColor:Interface"] == 0xff12a0e7,
+    "Unsigned INI default lost its owned section association or DWORD bits.");
+foreach (var invalidName in new[] { "fWrongType:Interface", "sWrongType", "uBad:Section:Extra", "uBad:" })
+    Require(FalloutExecutableStringTable.ReadIntegerInitializers(integerInitializer, _ => invalidName, _ => true).Count == 0,
+        "Integer default admitted an incompatible setting identity.");
 var smallInteger = new byte[20];
 new byte[] { 0x55, 0x8b, 0xec, 0x6a, 5, 0x68 }.CopyTo(smallInteger, 0);
 BinaryPrimitives.WriteUInt32LittleEndian(smallInteger.AsSpan(6), 0x100);

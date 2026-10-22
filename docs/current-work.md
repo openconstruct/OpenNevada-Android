@@ -10,7 +10,7 @@ are not parity or complete gameplay proof.
 
 ## Installed and observed
 
-APK 0.1.7/code 8 is now installed; the following gameplay observations are from
+APK 0.1.8/code 9 is now installed; the following gameplay observations are from
 the preceding APK 0.1.6/code 7. The owner completed SPECIAL,
 word association, inkblots, tag skills and traits, reaching Doc's farewell at
 VCG01 stage 110, and later stage 200 before the door attempt. Tag/trait selection needed touchscreen input. Save at stage 110
@@ -61,9 +61,10 @@ The owned grid/render-extent audit and full runtime gate pass. The selected
 graph is 25 cells/2,337 references versus the earlier 49/3,683; these counts are
 not device memory or gameplay proof. Vulkan confirms 960x540 internal 3D with
 1280x720 UI/output. Android ExportDebug properties report Optimize=true/net9.0.
-Finish signed export and publication of the checked candidate. Installation
-and ordinary cold Continue/exterior retry remain necessary to establish device
-performance or an exterior-memory fix. The default source cache is still a
+Signed ARM64 export is clean and its v2/v3 signature verifies. Code 9 is
+installed and the startup log confirms optimizedManagedCode=true and world
+scale 0.75/canvas scale 1. Ordinary cold Continue/exterior retry remain necessary
+to establish device performance or an exterior-memory fix. The default source cache is still a
 512 MiB budget; do not equate that budget with measured bytes or reduce it
 without checking the new memory checkpoints.
 

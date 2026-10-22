@@ -6,6 +6,51 @@ using OpenNV.Runtime.Presentation.Ui;
 
 public partial class NativeNifInstanceAudit
 {
+    private void ExerciseCreationMaterials(string root)
+    {
+        RuntimeLiveContentSource.Configure(root, RuntimeLiveContentSource.FalloutNewVegasGame);
+        using var source = RuntimeLiveContentSource.Current!;
+        using var records = FalloutPluginStack.Load(source.PluginSources);
+        var contract = FalloutNativeRaceSexResolver.Resolve(records);
+        var settings = FalloutInstallationSettings.Read(source);
+        var checkedParts = 0;
+        foreach (var race in contract.Races)
+            foreach (var female in new[] { false, true })
+            {
+                var creation = new FalloutNativeCharacterCreation(records, contract, contract.ForSex(female), settings);
+                creation.ChangeIdentity(race.RuntimeFormId, female);
+                void Audit()
+                {
+                    var appearance = creation.Appearance();
+                    foreach (var part in appearance.Models.Concat(appearance.RaceParts).Where(part => part.ModelPath is not null && part.AlternateTextures.Count != 0))
+                    {
+                        if (!source.TryRead(part.ModelPath!, null, out var bytes, out _)) throw new FileNotFoundException(part.ModelPath);
+                        var nif = OpenNV.Runtime.Formats.Gamebryo.FalloutNifFile.Read(bytes);
+                        try
+                        {
+                            foreach (var block in nif.Blocks.Where(block => block.TypeName is "NiTriShape" or "NiTriStrips" or "BSSegmentedTriShape"))
+                                _ = OpenNV.Runtime.Presentation.Rendering.NativeNpcMaterial.Alternate(part, nif, nif.ReadGeometry(block.Index));
+                        }
+                        catch (Exception error)
+                        {
+                            GD.Print($"OPENNV_CREATION_MATERIAL_SOURCE race={race.EditorId} female={female} role={part.Role} model={part.ModelPath} entries={System.Text.Json.JsonSerializer.Serialize(part.AlternateTextures.Select(entry => new { entry.ShapeName, entry.ShapeIndex, entry.TextureSet }))}");
+                            throw new InvalidDataException("Owned creation material selection failed.", error);
+                        }
+                        checkedParts++;
+                    }
+                }
+                Audit();
+                foreach (var hair in race.HairFor(female)) { creation.SetHair(hair); Audit(); }
+                foreach (var eye in race.EyesFor(female)) { creation.SetEyes(eye); Audit(); }
+                foreach (var headPart in creation.FacialHair())
+                {
+                    creation.ToggleHeadPart(headPart); Audit(); creation.ToggleHeadPart(headPart);
+                }
+            }
+        if (checkedParts == 0) throw new InvalidDataException("Owned creation audit did not exercise alternate textures.");
+        GD.Print($"OPENNV_CREATION_MATERIALS_PASS parts={checkedParts} scope=alternate-texture-targets renderedPreview=unverified");
+    }
+
     private async Task ExerciseMenuInput(string root)
     {
         var input = RuntimeConfiguration.Load().Player.DesktopInput;
@@ -88,6 +133,31 @@ public partial class NativeNifInstanceAudit
             await Press(JoyButton.DpadUp); Focus("sYes");
             await Press(JoyButton.A);
             if (accepted != "sNew") throw new InvalidDataException("Controller confirmation did not accept New Game.");
+            menu.Hide();
+            var creationMenu = new NativeOwnedRaceSexMenu(records, error => throw new InvalidDataException("Creation focus failed.", error));
+            AddChild(creationMenu);
+            try
+            {
+                var direction = 0;
+                creationMenu.Navigate += value => direction = value;
+                creationMenu.SetCanvas(new(1280, 720));
+                creationMenu.SetPage(1, "Controller audit", [new("Choice", false, () => { })]);
+                await Press(JoyButton.DpadDown);
+                if (GetViewport().GuiGetFocusOwner()?.Name != "RSM_back_button") throw new InvalidDataException("D-pad did not focus creation Back.");
+                await Press(JoyButton.A);
+                if (direction != -1) throw new InvalidDataException("Controller did not activate creation Back.");
+                await Press(JoyButton.DpadDown);
+                if (GetViewport().GuiGetFocusOwner()?.Name != "RSM_next_button") throw new InvalidDataException("D-pad did not focus creation Next.");
+                await Press(JoyButton.A);
+                if (direction != 1) throw new InvalidDataException("Controller did not activate creation Next.");
+                direction = 0;
+                await Press(JoyButton.B);
+                if (direction != -1) throw new InvalidDataException("Controller B did not navigate creation Back.");
+                GD.Print("OPENNV_CREATION_FOCUS_PASS back=true next=true accept=true cancel=true");
+            }
+            finally { creationMenu.Free(); creationMenu = null!; }
+            GC.Collect(); GC.WaitForPendingFinalizers();
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             GD.Print("OPENNV_MENU_INPUT_PASS navigation=true accept=true cancel=true confirmation=true desktopRetained=true idempotent=true lookFrameRateIndependent=true autoLaunch=true rememberedProfile=true missingAndAmbiguousFallback=true");
         }
         finally

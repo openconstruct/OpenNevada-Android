@@ -180,20 +180,21 @@ internal sealed partial class NativeOwnedRaceSexMenu : Control
             }
             if (input is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.WheelUp or MouseButton.WheelDown } wheel)
             { Scroll(wheel.ButtonIndex == MouseButton.WheelUp ? -1 : 1); GetViewport().SetInputAsHandled(); }
-            if (input is not InputEventKey { Pressed: true } key) return;
             var focused = _targets.SingleOrDefault(target => target.Button.HasFocus());
-            if (key.Keycode is Key.Left or Key.Right && focused is not null && _sliders.TryGetValue(focused.Owner, out var binding))
-            { Change(focused.Owner, binding.Value() + (key.Keycode == Key.Left ? -1 : 1)); GetViewport().SetInputAsHandled(); }
-            if (key.Keycode is Key.Up or Key.Down)
+            var horizontal = input.IsActionPressed("ui_left", true) ? -1 : input.IsActionPressed("ui_right", true) ? 1 : 0;
+            var vertical = input.IsActionPressed("ui_up", true) ? -1 : input.IsActionPressed("ui_down", true) ? 1 : 0;
+            if (horizontal != 0 && focused is not null && _sliders.TryGetValue(focused.Owner, out var binding))
+            { Change(focused.Owner, binding.Value() + horizontal); GetViewport().SetInputAsHandled(); }
+            if (vertical != 0)
             {
                 var navigation = _targets.Where(target => target.Tile == target.Owner && _rows.Contains(target.Tile))
                     .Concat(_targets.Where(target => target.Tile == _back || target.Tile == _next).Where(target => target.Button.Visible)).ToArray();
                 if (navigation.Length == 0) return;
                 var index = Array.IndexOf(navigation, focused);
-                Focus(navigation[(index + (key.Keycode == Key.Up ? -1 : 1) + navigation.Length) % navigation.Length]);
+                Focus(navigation[(index + vertical + navigation.Length) % navigation.Length]);
                 GetViewport().SetInputAsHandled();
             }
-            if (key.Keycode == Key.Escape && _page > 0) { Navigate?.Invoke(-1); GetViewport().SetInputAsHandled(); }
+            if (input.IsActionPressed("ui_cancel") && _page > 0) { Navigate?.Invoke(-1); GetViewport().SetInputAsHandled(); }
         });
     }
     private void Layout()
@@ -218,7 +219,17 @@ internal sealed partial class NativeOwnedRaceSexMenu : Control
     }
     private void Try(Action action) { try { action(); } catch (Exception error) { Fail(error); } }
     private void Fail(Exception error) { _faulted = true; foreach (var target in _targets) target.Button.Disabled = true; _failed(error); }
-    public override void _Draw() { if (!_faulted) Try(() => _tiles.Draw(this)); }
+    public override void _Draw()
+    {
+        if (_faulted) return;
+        Try(() =>
+        {
+            _tiles.Draw(this);
+            var focused = _targets.SingleOrDefault(target => target.Button.HasFocus() && target.Button.Visible);
+            if (focused is not null && (focused.Tile == _back || focused.Tile == _next))
+                DrawRect(new Rect2(focused.Button.Position, focused.Button.Size).Grow(2), _tiles.Color, false, 2);
+        });
+    }
 }
 
 internal sealed partial class NativeOwnedTileTarget : BaseButton

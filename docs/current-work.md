@@ -75,7 +75,9 @@ when speech ended and package locomotion resumed: its new animation clock kept
 an old published root distance, reporting backwards accumulation. The owner
 remains in that dialogue; do not restart unsaved play without coordinating.
 
-The checked candidate is APK 0.1.6 (code 7), not yet installed:
+APK 0.1.6 (code 7) is installed. An ordinary title-menu Continue after the app
+restart restored stage 55 and the room rendered. This is a selected cold-save
+restoration, not the complete interaction/save acceptance sequence:
 
 - Copy completed compute output into Mobile scene color with a color-attachment
   draw; that scene texture does not support the old storage-image binding.
@@ -98,10 +100,17 @@ The exact 720p SPECIAL preview was inspected and deleted. Synthetic Vulkan
 attachment readback passes. Signed ARM64 export completes without warnings or
 errors; these checks do not establish ordinary device behavior.
 
-Next executable outcome: publish the checked candidate and coordinate a device
-restart from the stage-55 save. Verify ordinary cold Continue, SPECIAL controls, Doc movement and
-next-test progression. Measure device frame time after the compositor correction;
-no FPS improvement is established. Keep cutscenes deferred.
+The device logs the new attachment output on its 1280x720
+A2B10G10R10UnormPack32 scene color. The prior storage-image binding failures are
+absent from the captured resumed-world log. The source reference-script parse
+divergence remains. The explicit policy log confirms bloom and output transfer
+on, automatic exposure/blur/double vision off; an older image-space summary
+still hardcodes adaptation=runtime and must be corrected in the next telemetry
+block.
+
+Next executable outcome: retry ordinary SPECIAL controls, Doc movement and the
+next-test transition from the resumed stage-55 session. Measure device frame time
+after the compositor correction; no FPS improvement is established. Keep cutscenes deferred.
 
 The six missing references, reached reference-script parsing divergence,
 movement/physics, expensive character preparation, active interaction save

@@ -169,3 +169,25 @@ color as unset and uses named system channels from the installation INI. This is
 an explicit native backend policy; matched retail color selection is unverified.
 The owned `--audit-interface-settings <installation>` probe checks that both HUD
 and main-menu colors retain their selected source channels.
+
+## Live opening playtest
+
+The owner reached Doc Mitchell speech, name entry using Android's keyboard,
+and character creation. World and HUD rendering are visible on APK 0.1.4.
+The owner reports very low frame rate, odd movement/physics, missing Next/Back
+focus feedback, a stalled character-generation continuation and a first-save
+error. These are open device acceptance failures.
+
+The selected beard preview has both an unresolved name-only alternate texture
+entry and a valid indexed entry. The native resolver now prefers an exact
+index/name association and retains strict ambiguity within either tier. Creation
+navigation consumes configured UI actions for keyboard and controller, and
+Next/Back have explicit focus outlines. Movie callbacks retain their originating
+quest/stage and retire when source execution has already changed it. World-save
+creation no longer requires a prior save; existing continuation validation stays
+in place. These source fixes require ordinary device acceptance.
+
+The Mobile image-space compositor repeatedly attempts to bind scene color as a
+storage image although that allocation lacks storage usage. A supported output
+presentation path and subsequent frame-time measurement remain required. Do not
+infer that log suppression, an effects bypass or a lower resolution fixes this.

@@ -12,6 +12,12 @@ public partial class NativeNifInstanceAudit : Node
     {
         try
         {
+            if (OS.GetCmdlineUserArgs() is ["--creation-materials", var creationRoot])
+            {
+                ExerciseCreationMaterials(creationRoot);
+                GetTree().Quit();
+                return;
+            }
             if (OS.GetCmdlineUserArgs() is ["--menu-input", var menuRoot])
             {
                 await ExerciseMenuInput(menuRoot);

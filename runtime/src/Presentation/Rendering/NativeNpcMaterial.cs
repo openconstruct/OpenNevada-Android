@@ -70,7 +70,14 @@ internal static class NativeNpcMaterial
                 throw new InvalidDataException($"Record alternate texture target differs: {part.Source}/{entry.ShapeIndex}/{entry.ShapeName}.");
             return matches[0];
         }
-        var selected = part.AlternateTextures.SingleOrDefault(entry => Target(entry).Block.Index == geometry.Block.Index);
+        // A bound index/name pair is more specific than an unresolved index
+        // which can only be associated by name. Keep ambiguity strict within
+        // each tier instead of applying both entries to the same geometry.
+        var selected = part.AlternateTextures.SingleOrDefault(entry =>
+            entry.ShapeIndex >= 0 && entry.ShapeIndex < shapes.Length &&
+            shapes[entry.ShapeIndex].Block.Index == geometry.Block.Index &&
+            shapes[entry.ShapeIndex].Name.TrimStart('#') == entry.ShapeName.TrimStart('#'));
+        selected ??= part.AlternateTextures.SingleOrDefault(entry => Target(entry).Block.Index == geometry.Block.Index);
         if (selected is null) return null;
         var properties = geometry.Properties.Where(index => index >= 0).Select(nif.ReadObject).ToArray();
         var shader = properties.OfType<FalloutNifShaderProperty>().SingleOrDefault();

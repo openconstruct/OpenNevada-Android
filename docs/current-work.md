@@ -68,31 +68,32 @@ selection and overlapping input need acceptance checks.
 
 ## Next owners
 
-1. Prioritize gameplay and content on the owner's direction. Cutscenes are
-   deferred. Android experimental startup passes `--skip-cutscenes`; PlayBink
-   retains command validation, explicitly logs skipped playback, and releases
-   the movie blocker through the existing deferred continuation. This is an
-   intentional playback omission, not movie support or script parity.
-2. Verify APK 0.1.4 on the Air X. Cold startup already bypasses installation
-   setup using the registered profile and retains the game's New/Continue menu.
-   The prior device build reached original shader package 002, then failed on
-   desktop `ffprobe` and missing HUD preferences. Missing/ambiguous profiles
-   still return to setup, and B during startup requests setup.
-3. Validate owned interface defaults and native UI policy. Integer initializers
-   now admit unsigned INI identities with sections using the existing DWORD or
-   sign-extended immediate forms and writable receiver validation. Unsigned
-   settings prefer INI overrides, then the original executable association.
-   The selected executable declares an unset custom HUD color. Native UI uses
-   the installation's named HUD/main-menu channels when that value is zero.
-   Owned setting checks pass; matched retail color-selection proof remains open.
-4. Enter ordinary gameplay, exercise move/look/interaction and menus, save,
-   quit, then cold Continue. The owner confirms D-pad focus and New Game
-   confirmation in the prior build. Physical gameplay controls and persistence
-   acceptance remain open. Do not infer playability from menu or parser checks.
-5. Trace the six remaining missing references and other measured loading
-   divergences. Keep the shared source-driven C# owners; no campaign shortcuts.
-6. Profile loading, memory, frame time and transitions after the acceptance
-   sequence works. Keep cutscene decoding in the backlog.
+1. Keep cutscenes deferred on the owner's direction; prioritize gameplay,
+   content, ordinary controls and first-save/cold-Continue acceptance.
+2. The owner reached Doc Mitchell speech, name entry with Android's keyboard,
+   and character creation on APK 0.1.4. World/HUD rendering is visible. The owner
+   reports very low frame rate and odd movement/physics. After character
+   acceptance, an earlier preview error retained the quest execution failure.
+   This is partial opening interaction, not gameplay completion.
+3. Validate live-playtest fixes: stage-scoped movie callbacks, explicit D-pad
+   navigation and focus outlines on creation Next/Back, indexed texture entries
+   taking priority over unresolved name-only entries, and first world-save
+   creation without an existing-file prerequisite. The owned beard-model audit
+   reproduces the original duplicate selection. Preserve strict ambiguity within
+   a selection tier. Native texture-selection policy is not retail pixel proof.
+4. Fix the measured Mobile compositor incompatibility: scene color lacks the
+   storage usage required by the compute output pass, causing repeated binding
+   failures. Preserve effects through a supported presentation path; do not
+   merely suppress errors or disable source effects. Measure frame time after
+   correcting resource ownership. Character previews and repeated material
+   construction also need loading/CPU measurements.
+5. Trace reference-script parsing divergence and the six missing references.
+   One admitted reference's original source contains an unmatched branch end;
+   do not silently relax the parser or invent compiled behavior.
+6. Exercise ordinary move/look, interaction, menus, first save, quit and cold
+   Continue on the Air X. Preserve continuation restrictions for active furniture,
+   speech and modal UI until their saved owners exist. A menu/probe pass does
+   not establish this sequence.
 
 ## Publication boundary
 

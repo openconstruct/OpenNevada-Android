@@ -111,19 +111,29 @@ internal partial class RuntimeNativeOpeningStageDriver
             case "playbink" when parts.Length == 1:
                 if (_moviePlaying) throw new InvalidOperationException("Movie player is already active.");
                 var movieCommand = FalloutMovieCommand.FromScript(command + " " + string.Join(' ', arguments)).Single();
+                var movieQuest = _machine.QuestEditorId;
+                var movieStage = _machine.Stage;
+                void CompleteMovie()
+                {
+                    _moviePlaying = false;
+                    // Source SetStage can retire the wait before deferred
+                    // playback completion. Never complete a different stage.
+                    if (!_machine.QuestEditorId.Equals(movieQuest, StringComparison.OrdinalIgnoreCase) || _machine.Stage != movieStage)
+                    {
+                        GD.Print($"OPENNV_MOVIE_CONTINUATION_RETIRED quest={movieQuest} stage={movieStage} currentQuest={_machine.QuestEditorId} currentStage={_machine.Stage}");
+                        return;
+                    }
+                    CompleteBlocker("playbink");
+                }
                 if (OS.GetCmdlineUserArgs().Contains("--skip-cutscenes", StringComparer.Ordinal))
                 {
                     GD.Print($"OPENNV_MOVIE_SKIPPED source={movieCommand.FileName} policy=explicit-skip-cutscenes playback=false");
-                    Callable.From(() => CompleteBlocker("playbink")).CallDeferred();
+                    Callable.From(CompleteMovie).CallDeferred();
                     break;
                 }
                 var movie = new NativeGamebryoMovie();
                 _moviePlaying = true;
-                movie.Configure(movieCommand, _ => Callable.From(() =>
-                {
-                    _moviePlaying = false;
-                    CompleteBlocker("playbink");
-                }).CallDeferred());
+                movie.Configure(movieCommand, _ => Callable.From(CompleteMovie).CallDeferred());
                 AddChild(movie);
                 break;
             case "moveto" when arguments.Count == 1 && _pluginStack.RuntimeFormId(target) == 0x14:

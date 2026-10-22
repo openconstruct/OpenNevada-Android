@@ -41,10 +41,11 @@ if (args is ["--audit-interface-settings", var interfaceRoot])
     RuntimeLiveContentSource.Configure(interfaceRoot, RuntimeLiveContentSource.FalloutNewVegasGame);
     using var source = RuntimeLiveContentSource.Current!;
     var settings = FalloutInstallationSettings.Read(source);
-    var custom = settings.Unsigned("Interface", "uHUDColor");
-    foreach (var name in new[] { "HUDMain", "MainMenu" })
+    foreach (var name in new[] { "HUDMain", "MainMenu", "Pipboy" })
     {
-        var packed = settings.InterfaceColor(name);
+        var customSetting = name == "Pipboy" ? "uPipboyColor" : "uHUDColor";
+        var custom = settings.Unsigned("Interface", customSetting);
+        var packed = settings.InterfaceColor(name, customSetting);
         if (custom != 0) Require(packed == custom, "Custom interface color was replaced.");
         else
         {

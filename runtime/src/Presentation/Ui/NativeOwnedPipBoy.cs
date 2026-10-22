@@ -178,6 +178,19 @@ internal sealed partial class NativeOwnedPipBoy : Control
     public override void _Ready()
     {
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect); Layout(); UpdateGlows();
+        if (!_worldSpace && (OS.HasFeature("android") || Input.GetConnectedJoypads().Count != 0))
+        {
+            var hints = new Label
+            {
+                Text = "LB/RB: STAT / ITEMS / DATA   |   Left/right: tabs   |   Up/down: select   |   A: use   |   B: close",
+                HorizontalAlignment = HorizontalAlignment.Center,
+                MouseFilter = MouseFilterEnum.Ignore
+            };
+            hints.AddThemeFontSizeOverride("font_size", 20);
+            AddChild(hints);
+            hints.SetAnchorsAndOffsetsPreset(LayoutPreset.BottomWide);
+            hints.OffsetTop = -34; hints.OffsetBottom = -8;
+        }
     }
     public override void _Process(double delta)
     {
@@ -216,7 +229,7 @@ internal sealed partial class NativeOwnedPipBoy : Control
     public override void _Input(InputEvent input)
     {
         if (_worldSpace) return;
-        if (input.IsActionPressed(_toggleAction) || input is InputEventKey { Pressed: true, Echo: false, PhysicalKeycode: Key.Escape })
+        if (input is InputEventJoypadButton { Pressed: true, ButtonIndex: JoyButton.B } || input.IsActionPressed(_toggleAction) || input is InputEventKey { Pressed: true, Echo: false, PhysicalKeycode: Key.Escape })
         { _closing = true; GetViewport().SetInputAsHandled(); return; }
         if (_closing || _openSeconds < _player.PipBoyDuration) { GetViewport().SetInputAsHandled(); return; }
         if (input is InputEventMouse mouse)
@@ -233,7 +246,7 @@ internal sealed partial class NativeOwnedPipBoy : Control
             if (copy is InputEventMouseMotion motion) motion.Relative = _lastPointer is { } previous ? point - previous : Vector2.Zero;
             _lastPointer = point; _canvas.PushInput(copy, true); GetViewport().SetInputAsHandled();
         }
-        else if (input is InputEventKey)
+        else if (input is InputEventKey or InputEventJoypadButton or InputEventJoypadMotion)
         { _canvas.PushInput(input, true); GetViewport().SetInputAsHandled(); }
     }
     internal void RequestClose() => _closing = true;

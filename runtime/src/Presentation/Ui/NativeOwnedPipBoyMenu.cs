@@ -47,6 +47,7 @@ internal sealed partial class NativeOwnedPipBoyMenu : Control
         open = _state.Open,
         page = _state.Page.ToString(),
         selection = _state.Selection,
+        attribute = _selectedAttribute,
         items = _state.Items.Count,
         limbs = PlayerLimbObservation,
         tags = _tags.Select(tag => tag.RuntimeFormId).ToArray(),
@@ -108,7 +109,7 @@ internal sealed partial class NativeOwnedPipBoyMenu : Control
             if (_state.Page == FalloutPipBoyPage.Stats) BuildStats();
             else if (_state.Page == FalloutPipBoyPage.Items) BuildItems();
             else BuildData();
-            Layout(); _tiles.ValidateDrawing();
+            Layout(); FocusControllerSelection(); _tiles.ValidateDrawing();
         }
         catch (Exception error) { Fail(error); }
         QueueRedraw();
@@ -121,10 +122,14 @@ internal sealed partial class NativeOwnedPipBoyMenu : Control
     private void Target(XElement tile, string label, Action action)
     {
         var font = _tiles.Font(tile.DescendantsAndSelf("text").FirstOrDefault() ?? tile);
-        var button = new NativeBitmapMenuButton(font.Font, font.Atlas, _tiles.TileColor(tile)) { Text = label, DrawText = false };
+        var button = new NativeBitmapMenuButton(font.Font, font.Atlas, _tiles.TileColor(tile))
+        { Name = "PipBoyTarget_" + (string?)tile.Attribute("name"), Text = label, DrawText = false };
+        var tiles = _tiles;
+        button.FocusEntered += () => { _controllerTarget = button.Name; tiles.Bind(tile, "mouseover", 1); QueueRedraw(); };
+        button.FocusExited += () => { tiles.Bind(tile, "mouseover", 0); QueueRedraw(); };
         button.Pressed += () => { try { action(); } catch (Exception error) { Fail(error); QueueRedraw(); } };
-        button.MouseEntered += () => { _tiles.Bind(tile, "mouseover", 1); QueueRedraw(); };
-        button.MouseExited += () => { _tiles.Bind(tile, "mouseover", 0); QueueRedraw(); };
+        button.MouseEntered += () => { tiles.Bind(tile, "mouseover", 1); QueueRedraw(); };
+        button.MouseExited += () => { tiles.Bind(tile, "mouseover", 0); QueueRedraw(); };
         AddChild(button); _buttons.Add((tile, button));
     }
     private void Tabs(string parentName, string[] labels)
@@ -460,6 +465,7 @@ internal sealed partial class NativeOwnedPipBoyMenu : Control
     }
     public override void _Input(InputEvent input)
     {
+        if (ControllerInput(input)) { GetViewport().SetInputAsHandled(); return; }
         if (input is InputEventMouseButton { Pressed: true } mouse && mouse.ButtonIndex is MouseButton.WheelDown or MouseButton.WheelUp && _map is null)
         { _offset += mouse.ButtonIndex == MouseButton.WheelDown ? 1 : -1; Refresh(); GetViewport().SetInputAsHandled(); }
     }
@@ -467,7 +473,12 @@ internal sealed partial class NativeOwnedPipBoyMenu : Control
     {
         if (Error is null)
         {
-            try { _tiles.Draw(this); }
+            try
+            {
+                _tiles.Draw(this);
+                var focused = _buttons.FirstOrDefault(target => target.Button.HasFocus()).Button;
+                if (focused is not null) DrawRect(new Rect2(focused.Position, focused.Size).Grow(2), _tiles.TileColor(_tiles.Root), false, 2);
+            }
             catch (Exception error) { Fail(error); }
         }
         if (Error is not null)

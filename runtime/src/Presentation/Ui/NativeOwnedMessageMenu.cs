@@ -240,7 +240,7 @@ internal sealed class NativeOwnedMenuTree
         if (value == "entity_hudmain") return Color;
         if (value == "entity_pipboy")
         {
-            var packed = _settings.Unsigned("Interface", "uPipboyColor");
+            var packed = _settings.InterfaceColor("Pipboy", "uPipboyColor");
             return new Color((packed >> 24) / 255f, ((packed >> 16) & 255) / 255f, ((packed >> 8) & 255) / 255f);
         }
         if (value == "entity_nosystemcolor") return new Color(1, 1, 1);

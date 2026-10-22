@@ -9,7 +9,7 @@ campaign support remains open. Work without subagents.
 
 The first acceptance sequence is launch -> select the owned install -> move/look
 -> interact -> save -> quit -> cold Continue. No game-data or device gameplay
-acceptance has been established in this fork.
+acceptance has been established in this fork. Launcher startup is verified.
 
 ## Verified baseline
 
@@ -29,9 +29,14 @@ acceptance has been established in this fork.
 - Owned installation checks pass base-game plugin/archive admission and the
   opening quests' compiled global-write bindings. One base master and seven
   archives are admitted. This does not establish ordinary opening gameplay.
+- A signed ARM64 debug APK exports without warnings or errors. Android texture
+  imports are enabled, the existing project mark is used as the icon, and stale
+  diagnostic scenes are excluded from the package. The installed app reaches the
+  launcher and filesystem picker at 1280x720 using Turnip and Forward Mobile.
+  This is not owned-world rendering or ordinary gameplay acceptance.
 - Android editor quick-deploy discovery is disabled in the preset. Its enabled
   state reproduces a 4.7.2 editor shutdown error even in an empty project. CLI
-  export and ADB installation remain available; no APK has been built yet.
+  export and ADB installation both succeed.
 
 ## Device observations
 
@@ -44,12 +49,14 @@ selection and overlapping input need acceptance checks.
 
 ## Next owners
 
-1. Provision Android export dependencies and produce the first asset-free APK.
-2. Test launcher/startup on the device; integrate platform services separately
-   from the Android archive's older desktop differences.
+1. Complete and verify the owned data transfer into app-accessible storage, then
+   attempt ordinary launcher-driven content loading. A large ADB shell stream
+   stalled; use the sync service and verify file integrity.
+2. Integrate platform services separately from the Android archive's older
+   desktop differences, guided by the next measured loading failure.
 3. Integrate physical input with frame-rate-independent right-stick look,
    correct modal behavior, and safe disconnect/focus transitions.
-4. Use the owner's completed New Vegas installation for content audits.
+4. Retain the passing owned-installation audits and extend them for each fix.
 5. Test the acceptance sequence on the Air X, then select the next measured
    loading, memory, rendering, or gameplay failure.
 

@@ -1,13 +1,13 @@
 # Android bring-up
 
 The initial target is an ARM64 Mangmi Air X with Android 14, a 720p system
-display override, and Turnip. No APK or device gameplay acceptance is established
-by the current desktop checks.
+display override, and Turnip. A signed debug APK has been exported and its
+launcher exercised on that device. Ordinary gameplay acceptance remains open.
 
 ## Build configuration
 
 Use Godot 4.7.2 Mono and its matching export templates, the .NET SDK pinned in
-`global.json`, and the Android SDK/JDK required by that Godot release. Configure
+`global.json`, JDK 17, Android SDK platform 36 and build-tools 36.0.0. Configure
 the Android SDK and Java SDK paths in Godot's editor settings. Keep local SDK
 paths and signing credentials outside tracked source.
 
@@ -15,7 +15,10 @@ The preset is `Android Handheld Experimental`. It exports ARM64 only, uses a
 separate package identity, and passes `-- --launcher` as its launch arguments.
 The Android framework is net9.0, as required by Godot 4.7.2's non-Gradle C#
 template; desktop retains net8.0. Godot's Mobile renderer is selected through a
-platform override. Shader/material compatibility remains a device check.
+platform override. ETC2/ASTC imports are enabled as required by Android export.
+The package uses the existing project mark and excludes diagnostic tool scenes;
+several retained audit scenes reference scripts absent from the source tree.
+Shader/material compatibility with owned content remains a device check.
 
 Framework selection can be inspected without exporting:
 
@@ -31,10 +34,28 @@ godot --headless --path runtime --export-debug "Android Handheld Experimental" /
 adb install -r /absolute/output/OpenNevada.apk
 ```
 
-These are the intended export steps, not a completed APK verification. Android
+These steps completed with no exporter errors or warnings on the Linux host.
+The APK contains only the ARM64 native ABI and includes the managed assembly.
+It contains no retail master/archive/executable/movie entries. Android
 editor quick-deploy discovery is disabled because it triggers an EditorSettings
 shutdown error in 4.7.2. The issue reproduces with an empty project; disabling
 discovery leaves a clean editor exit and does not disable command-line export.
+
+## Verified device boundary
+
+The debug package installs as `io.github.openconstruct.opennevada`. A cold start
+reaches `OPENNV_GODOT_LAUNCHER_READY`, and a focused visual check confirms the
+launcher and filesystem picker at 1280x720. Godot reports Vulkan 1.0.328,
+Forward Mobile, and Turnip Adreno 610. Device texture reporting and launcher
+rendering do not establish owned world rendering, control support or gameplay.
+
+The selected desktop installation passes plugin/archive admission and opening
+compiled global-write audits: one base master and seven archives. It has not yet
+passed ordinary Android loading or gameplay. Keep installation data separate
+from the APK and save state in app-owned storage. Shared app storage can reject
+ADB sync directory creation under Android 14; debug private storage is available
+through `adb shell run-as io.github.openconstruct.opennevada`. A large shell
+stream stalled this device connection; file transfers need integrity checks.
 
 ## Source integration
 

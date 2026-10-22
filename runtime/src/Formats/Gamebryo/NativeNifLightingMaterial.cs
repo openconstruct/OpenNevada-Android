@@ -10,7 +10,6 @@ namespace OpenNV.Runtime.Formats.Gamebryo;
 internal static class NativeNifLightingMaterial
 {
     internal const string ResourceIdentity = "Owned NIF SLS lighting";
-    private static readonly Dictionary<string, Shader> Shaders = new(StringComparer.Ordinal);
 
     internal static ShaderMaterial Build(StandardMaterial3D textures, FalloutNifShaderProperty source,
         FalloutNifMaterialProperty? material, FalloutNifAlphaProperty? alpha, FalloutNifVertexColorState vertexColors,
@@ -123,7 +122,7 @@ internal static class NativeNifLightingMaterial
         // native variant/constant and per-light selection still require matching.
         code.Replace("    DIFFUSE_LIGHT +=", "    SPECULAR_LIGHT += source_specular * source_specular_mask * (LIGHT_COLOR / PI) * retail_attenuation * pow(max(dot(NORMAL, normalize(LIGHT + VIEW)), 0.0), source_glossiness);\n    DIFFUSE_LIGHT +=");
         var shaderCode = code.ToString();
-        if (!Shaders.TryGetValue(shaderCode, out var compiled)) Shaders.Add(shaderCode, compiled = new Shader { Code = shaderCode });
+        var compiled = NativeShaderResources.Load(shaderCode);
         var result = new ShaderMaterial { Shader = compiled, ResourceName = ResourceIdentity };
         if (textures.NextPass is ShaderMaterial environment && environment.HasMeta("opennv_environment_light_fade"))
         {

@@ -348,10 +348,7 @@ public partial class RuntimeCoordinator
         _nativeRecentModelSets.Enqueue(models);
         while (_nativeRecentModelSets.Count > 3) _nativeRecentModelSets.Dequeue();
         var warmModels = _nativeRecentModelSets.SelectMany(set => set).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        foreach (var path in _nativeNifPrototypes.Keys.Where(path => !warmModels.Contains(path)).ToArray())
-        {
-            _nativeNifPrototypes[path].Scene.Root.Free(); _nativeNifPrototypes.Remove(path);
-        }
+        NativeNifPrototypeResidency.Trim(_nativeNifPrototypes, warmModels);
         Mark("prototype-eviction");
         var textures = root.GetChildren().OfType<RuntimeNativeLandscapeTransport>().Where(land => !land.IsQueuedForDeletion())
             .SelectMany(land => land.Source.Textures.Values).SelectMany(texture => new[] { texture.DiffusePath, texture.NormalPath })

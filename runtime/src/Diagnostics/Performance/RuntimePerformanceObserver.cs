@@ -53,7 +53,8 @@ internal partial class RuntimePerformanceObserver : Node
             swapKiB,
             prototypes,
             sourcePayloadCache = Content.RuntimeLiveContentSource.Current?.CacheState,
-            textureSharing = Presentation.Rendering.NativeDdsTexture.SharingState
+            textureSharing = Presentation.Rendering.NativeDdsTexture.SharingState,
+            shaderSharing = Presentation.Rendering.NativeShaderResources.State
         }));
     }
 

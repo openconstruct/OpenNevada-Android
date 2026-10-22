@@ -9,7 +9,6 @@ namespace OpenNV.Runtime.Formats.Gamebryo;
 internal static class NativeNifLodMaterial
 {
     internal const string ResourceIdentity = "Owned distant terrain and object lighting";
-    private static readonly Dictionary<bool, Shader> Shaders = [];
     private static readonly ConditionalWeakTable<RuntimeLiveContentSource, Dictionary<string, WeakReference<Texture2D>>> Textures = new();
 
     internal static Material? TryBuild(FalloutNifFile nif, FalloutNifGeometry geometry)
@@ -31,7 +30,7 @@ internal static class NativeNifLodMaterial
         // LOD_Landscape/LOD_Building select a separate depth-writing source
         // pass. Their serialized flags do not carry the ordinary material's
         // ZBuffer_Test/Write bits; treating them as ordinary SLS disables depth.
-        if (!Shaders.TryGetValue(landscape, out var compiled)) Shaders.Add(landscape, compiled = BuildShader(landscape));
+        var compiled = BuildShader(landscape);
         var material = new ShaderMaterial { Shader = compiled, ResourceName = ResourceIdentity };
         var source = RuntimeLiveContentSource.Current ?? throw new InvalidOperationException("LOD textures require owned data.");
         var cache = Textures.GetOrCreateValue(source);
@@ -110,6 +109,6 @@ internal static class NativeNifLodMaterial
             }
             """);
         RetailLighting.AppendDiffuseLightFunction(code);
-        return new Shader { Code = code.ToString() };
+        return NativeShaderResources.Load(code.ToString());
     }
 }

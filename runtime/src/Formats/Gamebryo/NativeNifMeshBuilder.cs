@@ -1964,7 +1964,7 @@ internal static partial class RuntimeNativeNifMeshBuilder
             // The parallax flag selects slot 3. Owned hair/armor can retain an
             // inactive texture there; its presence alone does not select a
             // different shader or remove the whole actor.
-            var result = new StandardMaterial3D
+            using var result = new StandardMaterial3D
             {
                 TextureRepeat = FalloutNifTextureAddressing.RepeatForGodot(shader.TextureClampMode),
                 Metallic = 0.0f,
@@ -2030,6 +2030,9 @@ internal static partial class RuntimeNativeNifMeshBuilder
                         (shader.ShaderFlags2 & ShaderFlagEnvironmentMapLightFade) != 0);
                 }
             }
+            // This StandardMaterial is only an input container for the source
+            // shader below. Neither it nor its copied environment pass is drawn.
+            using var environmentPassOwner = result.NextPass;
             if ((shader.ShaderFlags & FalloutNpcAppearanceHairColor.ShaderFlag) != 0)
             {
                 var tint = hairColor ?? throw new InvalidDataException("Hair shader has no actor colour owner.");
@@ -2393,10 +2396,7 @@ internal static partial class RuntimeNativeNifMeshBuilder
         {
             var result = new ShaderMaterial
             {
-                Shader = new Shader
-                {
-                    Code = lightFade ? EnvironmentLightFadeShader : EnvironmentShader,
-                },
+                Shader = NativeShaderResources.Load(lightFade ? EnvironmentLightFadeShader : EnvironmentShader),
             };
             NativeVariant.SetShaderParameter(result, "normal_map", normal);
             NativeVariant.SetShaderParameter(result, "environment_cube", environment);

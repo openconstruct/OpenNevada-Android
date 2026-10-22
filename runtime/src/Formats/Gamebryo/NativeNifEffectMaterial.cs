@@ -101,16 +101,13 @@ internal static class NativeNifEffectMaterial
         var result = new ShaderMaterial
         {
             ResourceName = ResourceIdentity,
-            Shader = new Shader
-            {
-                Code = Fragment
+            Shader = NativeShaderResources.Load(Fragment
                 .Replace("__BLEND__", blend)
                 .Replace("__DEPTH__", (source.ShaderFlags2 & 1) != 0 ? "depth_draw_always" : "depth_draw_never")
                 .Replace("__CULL__", doubleSided ? "cull_disabled" : "cull_back")
                 .Replace("__ALPHA_WRITE__", state.Blend == FalloutNifBlendMode.Opaque ? "" :
                     state.Blend is FalloutNifBlendMode.AddOne or FalloutNifBlendMode.Replace ? "ALPHA = 1.0;" : "ALPHA *= alpha;")
-                .Replace("__REPEAT__", FalloutNifTextureAddressing.RepeatForGodot(source.TextureClampMode) ? "repeat_enable" : "repeat_disable")
-            },
+                .Replace("__REPEAT__", FalloutNifTextureAddressing.RepeatForGodot(source.TextureClampMode) ? "repeat_enable" : "repeat_disable")),
         };
         if (texture is not null) NativeVariant.SetShaderParameter(result, "source_texture", texture);
         result.SetShaderParameter("source_has_texture", texture is not null);

@@ -1,6 +1,7 @@
 using Godot;
 using OpenNV.Runtime.Content;
 using OpenNV.Runtime.Presentation.Rendering;
+using OpenNV.Runtime.Diagnostics.Performance;
 
 public partial class NativeNifInstanceAudit
 {
@@ -47,12 +48,29 @@ public partial class NativeNifInstanceAudit
             view.AddChild(new Camera3D { Position = new(0, 0, 2), Current = true });
             view.AddChild(new MeshInstance3D { Mesh = new BoxMesh() });
             var canvas = new Control(); view.AddChild(canvas); canvas.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+            var fps = new RuntimeFpsOverlay(); view.AddChild(fps);
             for (var frame = 0; frame < 8; frame++) await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
             Require(effect.InternalSize == new Vector2I(960, 540), $"Unexpected internal 3D extent: {effect.InternalSize}.");
             Require(canvas.Size == new Vector2(1280, 720), "3D scaling changed the UI canvas extent.");
+            var bounds = fps.Panel.GetGlobalRect();
+            Require(bounds.Position.X >= 1100 && bounds.Position.Y == 12 && bounds.End.X == 1268 && bounds.End.Y <= 60,
+                $"FPS overlay escaped the native-resolution top-right bounds: {bounds}.");
+            Require(fps.Panel.MouseFilter == Control.MouseFilterEnum.Ignore && fps.ProcessMode == Node.ProcessModeEnum.Always,
+                "FPS overlay intercepts input or stops while paused.");
+            GetTree().Paused = true;
+            try
+            {
+                var started = Time.GetTicksMsec();
+                while (Time.GetTicksMsec() - started < 1100)
+                    await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+                Require(fps.DisplayText.EndsWith(" FPS", StringComparison.Ordinal) &&
+                    int.TryParse(fps.DisplayText.AsSpan(0, fps.DisplayText.Length - 4), out var measuredFps) && measuredFps > 0,
+                    "FPS overlay did not sample the engine while paused.");
+            }
+            finally { GetTree().Paused = false; }
             using var image = view.GetTexture().GetImage();
             Require(image.GetSize() == new Vector2I(1280, 720), "3D scaling changed the presented output extent.");
-            GD.Print($"OPENNV_PERFORMANCE_POLICY_PASS ownedDiameter={originalDiameter} cells={selected.Cells.Count} references={selected.Scene.References.Count} previousForcedCells={oldForced.Cells.Count} previousForcedReferences={oldForced.Scene.References.Count} internal=960x540 ui=1280x720 output=1280x720 xrUnchanged=true invalidRejected=true ordinaryPerformance=unverified");
+            GD.Print($"OPENNV_PERFORMANCE_POLICY_PASS ownedDiameter={originalDiameter} cells={selected.Cells.Count} references={selected.Scene.References.Count} previousForcedCells={oldForced.Cells.Count} previousForcedReferences={oldForced.Scene.References.Count} internal=960x540 ui=1280x720 output=1280x720 fpsOverlay=topRight pausedSampling=true xrUnchanged=true invalidRejected=true ordinaryPerformance=unverified");
         }
         finally { view.Free(); effect.Dispose(); }
     }

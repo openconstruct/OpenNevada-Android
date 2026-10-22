@@ -151,6 +151,8 @@ public partial class RuntimeCoordinator : Node3D
                 _configuration.Sha256,
                 performanceReportPath);
             AddChild(performanceObserver);
+            if (OS.GetCmdlineUserArgs().Contains("--fps-overlay", StringComparer.Ordinal))
+                AddChild(new RuntimeFpsOverlay());
             if (launch.LoadingTitle is not null)
                 _loadingScreen?.SetTitle(launch.LoadingTitle);
             RuntimeLaunchValidator.ValidatePreflight(_options);

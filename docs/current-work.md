@@ -74,8 +74,9 @@ model-ready/commit. The smaller cap works but does not fix exterior loading. The
 save is preserved; duplicate texture uploads and transition overlap remain next.
 
 The top-right FPS overlay remains enabled, with 960x540 3D and native 1280x720
-UI/output. Keep the same APK/save when comparing driver settings. The latest
-physical gameplay measurement remains 20–22 FPS on code 9, not a 30 FPS result.
+UI/output. Keep the same APK/save and driver when comparing changes. The code-11
+stationary interior view measured roughly 27–30 FPS, with dips during movement;
+this does not establish sustained 30 FPS or isolate the cache change.
 
 Ordinary NIF material loading currently creates DDS textures repeatedly, and
 animated prototype instances rebuild materials/controllers. Investigate sharing
@@ -126,3 +127,8 @@ world frame. Drawing resumed about 46 seconds later; telemetry then reported
 21–28 FPS. The loading overlay's 58 FPS was stale. This was a long first-frame
 stall, not a new LOW_MEMORY death. Its precise owner remains unisolated. The
 owner authorized replacing the running session and restarting from the save.
+
+After the exterior kill, code 11 was relaunched and ordinary Continue restored
+the unchanged save again. The room rendered and the ordinary pause menu was
+opened, leaving the handheld paused in the working interior. Temporary display
+checks were inspected and deleted. No frame recording remains enabled.

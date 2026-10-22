@@ -12,6 +12,12 @@ public partial class NativeNifInstanceAudit : Node
     {
         try
         {
+            if (OS.GetCmdlineUserArgs() is ["--packed-collision", var collisionRoot, var collisionModel])
+            {
+                ExerciseOwnedPackedCollision(collisionRoot, collisionModel);
+                GetTree().Quit();
+                return;
+            }
             if (OS.GetCmdlineUserArgs() is ["--upload-cost", var uploadRoot, var uploadModel])
             {
                 ExerciseUploadCost(uploadRoot, uploadModel);
@@ -67,6 +73,7 @@ public partial class NativeNifInstanceAudit : Node
                 return;
             }
             ExerciseReferenceAngles();
+            ExercisePackedCollision();
             Exercise(Synthetic(), 0.02f, "synthetic");
             ExercisePlaced(Synthetic(false), 0.02f);
             ExercisePlacedLights();

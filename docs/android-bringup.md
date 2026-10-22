@@ -50,8 +50,24 @@ Forward Mobile, and Turnip Adreno 610. Device texture reporting and launcher
 rendering do not establish owned world rendering, control support or gameplay.
 
 The selected desktop installation passes plugin/archive admission and opening
-compiled global-write audits: one base master and seven archives. It has not yet
-passed ordinary Android loading or gameplay. Keep installation data separate
+compiled global-write audits: one base master and seven archives. All 277 copied
+device files match their desktop SHA-256 hashes. The private installation is
+registered through the ordinary picker. Launch indexes the base plugin and
+prepares the opening cell, with visible title art and owner-confirmed music.
+Baseline preparation reports 67 missing references, including packed collision
+index-extraction failures, and HUD initialization reports missing owned
+`[Interface] uHUDColor`. Ordinary gameplay remains unverified.
+
+Packed collision now expands the decoded source triangles directly into the
+physics shape. Face order, coordinate conversion, scale and backface collision
+are retained without a render-mesh upload/readback. Synthetic validation checks
+those properties and invalid inputs; targeted owned table, gun cabinet and wall
+models pass the native shape audit. Updated APK 0.1.1 (version code 2) completes
+the same cell preparation with 429 observed references out of 435, six missing,
+and no packed-collision extraction errors. The HUD settings failure remains.
+These counts do not establish actor behavior, world rendering or gameplay.
+
+Keep installation data separate
 from the APK and save state in app-owned storage. Shared app storage can reject
 ADB sync directory creation under Android 14; debug private storage is available
 through `adb shell run-as io.github.openconstruct.opennevada`. A large shell

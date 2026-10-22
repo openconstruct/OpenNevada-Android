@@ -13,10 +13,12 @@ internal static class RetailImageSpaceRenderer
     {
         var cinematic = new Vector4(source.Cinematic.X, source.Cinematic.Y, source.Cinematic.Z, source.Cinematic.W);
         var tint = new Vector4(source.Tint.X, source.Tint.Y, source.Tint.Z, source.Tint.W);
+        var programs = FalloutImageSpacePrograms.Read(RuntimeLiveContentSource.Current ??
+            throw new InvalidOperationException("Owned image-space content is absent."));
+        GD.Print($"OPENNV_IMAGE_SPACE_PROGRAMS_READY selection={programs.SelectionPolicy} source={programs.SourceIdentity} parity=unverified");
         var effect = new RetailHdrCompositorEffect(source.TargetLuminance, 1, cinematic, tint, Vector4.Zero,
             configuration, capture, outputTransfer, runtimeAdaptation: true,
-            FalloutImageSpacePrograms.Read(RuntimeLiveContentSource.Current ??
-                throw new InvalidOperationException("Owned image-space content is absent.")));
+            programs);
         var compositor = new Compositor { CompositorEffects = new Godot.Collections.Array<CompositorEffect> { effect } };
         return new Application(configuration.Schema, cinematic, tint, Vector4.Zero, 1, source.DnamSha256,
             [], effect, compositor);

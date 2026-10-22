@@ -12,6 +12,13 @@ public partial class RuntimeCoordinator
         launcher.Configure();
         launcher.LaunchRequested += request => StartInProcessLaunch(launcher, request);
         AddChild(launcher);
+        var configure = Input.IsActionPressed("ui_cancel") || Input.GetConnectedJoypads().Any(device => Input.IsJoyButtonPressed(device, JoyButton.B));
+        if (_options.ContainsKey("auto-launch") && !configure && launcher.TryAutoLaunch())
+        {
+            GD.Print("OPENNV_GODOT_AUTO_LAUNCH source=registered-profile");
+            DismissLoadingScreen();
+            return;
+        }
         SetMeta("opennv_product_entry", "godot-native-launcher-v1");
         GD.Print("OPENNV_GODOT_LAUNCHER_READY source=live-installation-picker " +
             "routes=manifest-backed profiles=godot-native");

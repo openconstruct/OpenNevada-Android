@@ -12,7 +12,13 @@ the Android SDK and Java SDK paths in Godot's editor settings. Keep local SDK
 paths and signing credentials outside tracked source.
 
 The preset is `Android Handheld Experimental`. It exports ARM64 only, uses a
-separate package identity, and passes `-- --launcher` as its launch arguments.
+separate package identity, and passes `-- --launcher --auto-launch` as its launch
+arguments. A remembered campaign, or a single existing profile, enters the game
+without showing the installation launcher. First setup, missing files, ambiguous
+profiles without a remembered selection, or rejected launch validation return to
+the picker. Holding B (or keyboard Escape) during startup requests the launcher.
+The game's own New/Continue menu remains available; startup never creates or
+overwrites a save automatically.
 The Android framework is net9.0, as required by Godot 4.7.2's non-Gradle C#
 template; desktop retains net8.0. Godot's Mobile renderer is selected through a
 platform override. ETC2/ASTC imports are enabled as required by Android export.
@@ -79,6 +85,24 @@ The original Android release supplies changes separately in a source archive.
 Review startup, access to the selected installation, input, serialization, movie
 playback, and rendering individually. That archive also contains earlier desktop
 code; importing it wholesale would remove newer gameplay and persistence fixes.
+
+## Native renderer selection
+
+Windows `RendererInfo.txt` is optional for native startup. An existing report
+still selects its original shader package strictly; malformed reports fail.
+Without that report, OpenNV uses a deterministic native policy: the first owned
+shader package in logical path order whose required image-space programs decode
+with supported instructions and parameter interfaces. This selects original
+programs, not substitute filters or a fabricated Windows hardware report.
+Malformed data fails; unsupported candidates can be rejected during negotiation.
+The selected source and policy are logged as `OPENNV_IMAGE_SPACE_PROGRAMS_READY`.
+This is an OpenNV backend policy, not reconstructed retail hardware detection or
+pixel parity. The rendered-menu path shares that selection. Decoded programs are
+reused in-process and never written as persistent launch assets.
+
+The owned probe admits seven blur programs and the prefilter/double-vision
+programs from the installed source. Synthetic checks retain explicit renderer
+selection and reject malformed reports. Device world rendering remains open.
 
 ## Controller input
 

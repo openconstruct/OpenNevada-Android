@@ -6,6 +6,13 @@ namespace OpenNV.Runtime.Content;
 /// <summary>The renderer profile selected in the owned installation's configuration.</summary>
 internal sealed record FalloutRendererConfiguration(int ShaderPackage)
 {
+    internal static FalloutRendererConfiguration? ReadOptional(string path)
+    {
+        try { return Read(File.ReadAllText(path)); }
+        catch (FileNotFoundException) { return null; }
+        catch (DirectoryNotFoundException) { return null; }
+    }
+
     internal static FalloutRendererConfiguration Read(string text)
     {
         var rows = text.Split('\n').Select(line => line.Trim())

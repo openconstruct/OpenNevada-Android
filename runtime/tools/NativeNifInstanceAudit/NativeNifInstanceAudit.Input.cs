@@ -29,6 +29,9 @@ public partial class NativeNifInstanceAudit
         var profiles = GodotLauncherProfileStore.Open(Path.Combine(auditRoot, "profiles.json"), Path.Combine(auditRoot, "saves"));
         var launcher = new NativeGodotLauncher();
         profiles.Save("newvegas", root);
+        if (profiles.AutoLaunchCampaignId != "newvegas") throw new InvalidDataException("Single-profile auto launch was lost.");
+        profiles.Save("fallout3", Path.Combine(auditRoot, "missing-fo3"));
+        if (profiles.AutoLaunchCampaignId is not null) throw new InvalidDataException("Ambiguous profiles auto-launched without a selection.");
         launcher.Configure(profiles);
         var launched = false;
         launcher.LaunchRequested += _ => launched = true;
@@ -44,8 +47,28 @@ public partial class NativeNifInstanceAudit
         finally
         {
             launcher.Free();
-            Directory.Delete(auditRoot, true);
         }
+        launcher = new NativeGodotLauncher();
+        launcher.Configure(GodotLauncherProfileStore.Open(Path.Combine(auditRoot, "profiles.json"), Path.Combine(auditRoot, "saves")));
+        launched = false;
+        launcher.LaunchRequested += _ => launched = true;
+        AddChild(launcher);
+        try
+        {
+            if (!launcher.TryAutoLaunch() || !launched)
+                throw new InvalidDataException("Remembered profile did not auto-launch after reload.");
+        }
+        finally { launcher.Free(); }
+        profiles.Save("newvegas", Path.Combine(auditRoot, "missing-nv"));
+        launcher = new NativeGodotLauncher();
+        launcher.Configure(profiles);
+        launcher.LaunchRequested += _ => throw new InvalidDataException("Missing installation was auto-launched.");
+        AddChild(launcher);
+        try
+        {
+            if (launcher.TryAutoLaunch()) throw new InvalidDataException("Missing installation did not return to the picker.");
+        }
+        finally { launcher.Free(); Directory.Delete(auditRoot, true); }
         RuntimeLiveContentSource.Configure(root, RuntimeLiveContentSource.FalloutNewVegasGame);
         using var content = RuntimeLiveContentSource.Current!;
         using var records = FalloutPluginStack.Load(content.PluginSources);
@@ -65,7 +88,7 @@ public partial class NativeNifInstanceAudit
             await Press(JoyButton.DpadUp); Focus("sYes");
             await Press(JoyButton.A);
             if (accepted != "sNew") throw new InvalidDataException("Controller confirmation did not accept New Game.");
-            GD.Print("OPENNV_MENU_INPUT_PASS navigation=true accept=true cancel=true confirmation=true desktopRetained=true idempotent=true lookFrameRateIndependent=true");
+            GD.Print("OPENNV_MENU_INPUT_PASS navigation=true accept=true cancel=true confirmation=true desktopRetained=true idempotent=true lookFrameRateIndependent=true autoLaunch=true rememberedProfile=true missingAndAmbiguousFallback=true");
         }
         finally
         {

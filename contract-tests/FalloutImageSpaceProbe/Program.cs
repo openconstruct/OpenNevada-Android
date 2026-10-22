@@ -2,6 +2,16 @@ using System.Buffers.Binary;
 using System.Numerics;
 using OpenNV.Runtime.Content;
 
+if (args is ["--programs", var programRoot])
+{
+    RuntimeLiveContentSource.Configure(programRoot, RuntimeLiveContentSource.FalloutNewVegasGame);
+    using var programSource = RuntimeLiveContentSource.Current!;
+    var programs = FalloutImageSpacePrograms.Read(programSource);
+    if (string.IsNullOrWhiteSpace(programs.ComputeFunctions())) throw new InvalidDataException("Owned image-space programs did not translate.");
+    Console.WriteLine($"OPENNV_OWNED_IMAGE_PROGRAMS_PASS policy={programs.SelectionPolicy} source={programs.SourceIdentity} blurPrograms={programs.Blur.Count} pixelParity=unverified");
+    return;
+}
+
 GameTimeProbe.Run();
 ImageEffectsDeclarationsProbe.Run();
 DirectionalLightProbe.Run();
@@ -110,6 +120,19 @@ Require(FalloutRendererConfiguration.Read("Device: synthetic\r\n\tShader Package
 Expect<InvalidDataException>(() => FalloutRendererConfiguration.Read("Shader Package: 2\nShader Package: 3"));
 Expect<InvalidDataException>(() => FalloutRendererConfiguration.Read("Shader Package: ../3"));
 Expect<InvalidDataException>(() => FalloutRendererConfiguration.Read("Shader Package: 0"));
+var rendererProbe = Path.Combine(Path.GetTempPath(), "opennv-renderer-" + Guid.NewGuid().ToString("N"));
+Require(FalloutRendererConfiguration.ReadOptional(Path.Combine(rendererProbe, "RendererInfo.txt")) is null,
+    "A missing Windows hardware report prevented native startup.");
+Directory.CreateDirectory(rendererProbe);
+try
+{
+    var rendererPath = Path.Combine(rendererProbe, "RendererInfo.txt");
+    File.WriteAllText(rendererPath, "Shader Package: 31");
+    Require(FalloutRendererConfiguration.ReadOptional(rendererPath)?.ShaderPackage == 31, "Explicit renderer selection was ignored.");
+    File.WriteAllText(rendererPath, "Shader Package: unknown");
+    Expect<InvalidDataException>(() => FalloutRendererConfiguration.ReadOptional(rendererPath));
+}
+finally { Directory.Delete(rendererProbe, true); }
 var classicBytes = new byte[132];
 var modernBytes = new byte[152];
 for (var index = 0; index < 32; index++)

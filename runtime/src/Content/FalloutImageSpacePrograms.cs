@@ -9,14 +9,44 @@ internal sealed record FalloutImageSpacePrograms(FalloutImageSpaceKernels Kernel
     FalloutD3D9PixelProgram Prefilter, IReadOnlyList<FalloutD3D9PixelProgram> Blur,
     FalloutD3D9PixelProgram DoubleVision, FalloutDoubleVisionPhase DoubleVisionPhase, string SourceIdentity)
 {
-    internal static FalloutImageSpacePrograms Read(RuntimeLiveContentSource source)
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<RuntimeLiveContentSource, FalloutImageSpacePrograms> Instances = new();
+    internal string ShaderPackagePath { get; private init; } = "";
+    internal string SelectionPolicy { get; private init; } = "owned-renderer-info";
+
+    internal static FalloutImageSpacePrograms Read(RuntimeLiveContentSource source) => Instances.GetValue(source, ReadInstallation);
+
+    private static FalloutImageSpacePrograms ReadInstallation(RuntimeLiveContentSource source)
     {
         var settings = FalloutInstallationSettings.Read(source);
-        var path = $"shaders/shaderpackage{settings.Renderer.ShaderPackage:000}.sdp";
-        if (!source.TryRead(path, null, out var bytes, out var identity)) throw new FileNotFoundException(path);
         var executable = Path.Combine(Path.GetDirectoryName(source.ContentRoot)!,
             source.Game == RuntimeLiveContentSource.FalloutNewVegasGame ? "FalloutNV.exe" : "Fallout3.exe");
-        return Decode(bytes, FalloutImageSpaceKernels.Read(executable), FalloutExecutableStringTable.ReadDoubleVisionPhase(executable), identity);
+        var kernels = FalloutImageSpaceKernels.Read(executable);
+        var phase = FalloutExecutableStringTable.ReadDoubleVisionPhase(executable);
+        FalloutImageSpacePrograms ReadPackage(string path)
+        {
+            if (!source.TryRead(path, null, out var bytes, out var identity)) throw new FileNotFoundException(path);
+            return Decode(bytes, kernels, phase, identity) with { ShaderPackagePath = path };
+        }
+        if (settings.Renderer is { } renderer)
+            return ReadPackage($"shaders/shaderpackage{renderer.ShaderPackage:000}.sdp");
+
+        // Native OpenNV has no Windows/D3D hardware report. Negotiate an original
+        // package against our decoder instead of inventing a RendererInfo file.
+        // This is a deterministic OpenNV policy, not a retail profile/parity claim.
+        var rejected = new List<string>();
+        foreach (var path in source.ResourcePathsUnder("shaders").Where(path =>
+            System.Text.RegularExpressions.Regex.IsMatch(path,
+                @"^shaders[\\/]shaderpackage[0-9]+\.sdp$",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.CultureInvariant))
+            .Order(StringComparer.OrdinalIgnoreCase))
+        {
+            try
+            {
+                return ReadPackage(path) with { SelectionPolicy = "native-first-supported-original;retail-profile-unverified" };
+            }
+            catch (NotSupportedException error) { rejected.Add($"{path}: {error.Message}"); }
+        }
+        throw new NotSupportedException("No owned shader package supports native image-space decoding. " + string.Join("; ", rejected));
     }
 
     internal static FalloutImageSpacePrograms Decode(byte[] package, FalloutImageSpaceKernels kernels,

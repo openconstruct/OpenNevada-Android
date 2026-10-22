@@ -33,7 +33,9 @@ internal sealed partial class NativeOwnedRenderedScreen : Node
         ProcessMode = ProcessModeEnum.Always;
         _device = device;
         var source = RuntimeLiveContentSource.Current ?? throw new InvalidOperationException("Owned screen content is absent.");
-        var path = $"shaders/shaderpackage{settings.Renderer.ShaderPackage:000}.sdp";
+        var path = settings.Renderer is { } renderer
+            ? $"shaders/shaderpackage{renderer.ShaderPackage:000}.sdp"
+            : FalloutImageSpacePrograms.Read(source).ShaderPackagePath;
         if (!source.TryRead(path, null, out var bytes, out var identity)) throw new FileNotFoundException(path);
         var bytecode = FalloutShaderPackage.Read(bytes).Single(shader => shader.Name.Equals("ISTV.pso", StringComparison.OrdinalIgnoreCase));
         var program = _program = FalloutD3D9PixelProgram.Read(bytecode.Bytecode, new HashSet<int> { 1, 2 });

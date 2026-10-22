@@ -261,6 +261,18 @@ internal sealed partial class NativeGodotLauncher : Control
         _fileDialog = null;
     }
 
+    internal bool TryAutoLaunch()
+    {
+        var id = _profiles.AutoLaunchCampaignId;
+        var campaign = _campaigns.FirstOrDefault(row => row.Id == id);
+        if (campaign is null || FalloutModInstallation.IsMod(campaign.Id)) return false;
+        _selectedId = _selectedGameId = campaign.Id;
+        _selectedPresentation = campaign.DefaultPresentation;
+        Refresh();
+        LaunchSelected();
+        return _launching;
+    }
+
     private void LaunchSelected()
     {
         if (_launching)
@@ -305,6 +317,7 @@ internal sealed partial class NativeGodotLauncher : Control
                 selection);
             GD.Print($"OPENNV_GODOT_LAUNCH_REQUEST campaign={campaign.Id} presentation={_selectedPresentation} " +
                 $"source={profile.InstallRoot} save={profile.SavePath} mode=in-process");
+            _profiles.RememberLaunch(campaign.Id);
             LaunchRequested?.Invoke(request);
         }
         catch (Exception exception)

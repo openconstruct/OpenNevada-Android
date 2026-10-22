@@ -7,8 +7,8 @@ internal sealed class FalloutInstallationSettings
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<RuntimeLiveContentSource, FalloutInstallationSettings> Instances = new();
     private readonly Dictionary<string, string> _values = new(StringComparer.OrdinalIgnoreCase);
     private Lazy<IReadOnlyDictionary<string, float>> _floatDefaults = null!;
-    private Lazy<FalloutRendererConfiguration> _renderer = null!;
-    internal FalloutRendererConfiguration Renderer => _renderer.Value;
+    private Lazy<FalloutRendererConfiguration?> _renderer = null!;
+    internal FalloutRendererConfiguration? Renderer => _renderer.Value;
 
     internal static FalloutInstallationSettings Read(RuntimeLiveContentSource source) => Instances.GetValue(source, ReadInstallation);
 
@@ -22,7 +22,7 @@ internal sealed class FalloutInstallationSettings
         var gameFolder = source.Game == RuntimeLiveContentSource.FalloutNewVegasGame ? "FalloutNV" : "Fallout3";
         var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         var user = Path.Combine(documents, "My Games", gameFolder);
-        settings._renderer = new(() => FalloutRendererConfiguration.Read(File.ReadAllText(Path.Combine(user, "RendererInfo.txt"))));
+        settings._renderer = new(() => FalloutRendererConfiguration.ReadOptional(Path.Combine(user, "RendererInfo.txt")));
         settings.Add(Path.Combine(user, "Fallout.ini"), false);
         settings.Add(Path.Combine(user, "FalloutPrefs.ini"), false);
         settings.Add(Path.Combine(user, "FalloutCustom.ini"), false);

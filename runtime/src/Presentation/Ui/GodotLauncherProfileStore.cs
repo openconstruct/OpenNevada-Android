@@ -32,6 +32,18 @@ internal sealed class GodotLauncherProfileStore
     };
     private readonly Dictionary<string, GodotLauncherProfile> _profiles =
         new(StringComparer.OrdinalIgnoreCase);
+    private string? _lastCampaignId;
+    internal string? AutoLaunchCampaignId => _lastCampaignId ??
+        (_profiles.Count == 1 ? _profiles.Keys.Single() : null);
+
+    internal void RememberLaunch(string campaignId)
+    {
+        if (!_profiles.ContainsKey(campaignId)) throw new InvalidOperationException("The campaign has no installation profile.");
+        var previous = _lastCampaignId;
+        _lastCampaignId = campaignId;
+        try { Persist(); }
+        catch { _lastCampaignId = previous; throw; }
+    }
 
     private GodotLauncherProfileStore(string path, string saveRoot) => (_path, _saveRoot) = (path, saveRoot);
 
@@ -187,6 +199,9 @@ internal sealed class GodotLauncherProfileStore
                 catch (ArgumentException) { continue; }
                 _profiles[profile.CampaignId] = profile;
             }
+            if (root.TryGetProperty("lastCampaignId", out var last) && last.ValueKind == JsonValueKind.String &&
+                last.GetString() is { } id && _profiles.ContainsKey(id))
+                _lastCampaignId = id;
         }
         catch (JsonException)
         {
@@ -299,6 +314,7 @@ internal sealed class GodotLauncherProfileStore
         var document = new
         {
             schema = Schema,
+            lastCampaignId = _lastCampaignId,
             profiles = _profiles,
         };
         File.WriteAllText(

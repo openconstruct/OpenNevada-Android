@@ -68,6 +68,9 @@ internal partial class RuntimeNativeExteriorEnvironment : Node
             DirectionalShadowMode = DirectionalLight3D.ShadowMode.Parallel4Splits
         };
         AddChild(_sun);
+        RuntimeSunShadows.Changed += ApplyShadowQuality;
+        RuntimeViewDistance.Changed += Sample;
+        ApplyShadowQuality();
         Register(_scene);
         SetMeta("opennv_exterior_presentation_unverified", "clouds,celestial-projection,weather-transition,region-edge-blend,LOD,matched-pixels");
         Sample();
@@ -75,9 +78,13 @@ internal partial class RuntimeNativeExteriorEnvironment : Node
 
     public override void _ExitTree()
     {
+        RuntimeSunShadows.Changed -= ApplyShadowQuality;
+        RuntimeViewDistance.Changed -= Sample;
         if (_tree is not null) { _tree.NodeAdded -= BindAdded; _tree.NodeRemoved -= RemoveSurface; }
         _tree = null; _meshes.Clear();
     }
+
+    private void ApplyShadowQuality() => RuntimeSunShadows.Apply(_sun);
 
     public override void _Process(double delta)
     {
@@ -112,6 +119,7 @@ internal partial class RuntimeNativeExteriorEnvironment : Node
         var far = Mathf.Lerp(values[1], values[3], night);
         var power = Mathf.Lerp(values[4], values[5], night);
         if (far <= near || power <= 0) throw new InvalidDataException("Weather fog interval is invalid.");
+        (near, far) = RuntimeViewDistance.Fog(near, far, _units);
         _environment.FogDepthBegin = Math.Max(0, near * _units);
         _environment.FogDepthEnd = far * _units;
         _environment.FogDepthCurve = power;

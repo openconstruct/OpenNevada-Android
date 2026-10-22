@@ -137,6 +137,8 @@ public partial class RuntimeCoordinator : Node3D
                 _configuration.Capture.ExpectedWidthPixels,
                 _configuration.Capture.ExpectedHeightPixels);
             Presentation.Rendering.RuntimeRenderScale.Apply(GetViewport(), OS.GetCmdlineUserArgs(), _options.ContainsKey("vr"));
+            Presentation.Rendering.RuntimeSunShadows.Configure(OS.GetCmdlineUserArgs());
+            Presentation.Rendering.RuntimeViewDistance.Configure(OS.GetCmdlineUserArgs());
             RenderingServer.SetDefaultClearColor(_configuration.Renderer.BackgroundColorRgba.Color());
             Engine.PhysicsTicksPerSecond = _configuration.Simulation.PhysicsTicksPerSecond;
             var performanceReportPath = _options.TryGetValue(

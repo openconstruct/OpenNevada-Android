@@ -12,6 +12,12 @@ public partial class NativeNifInstanceAudit : Node
     {
         try
         {
+            if (OS.GetCmdlineUserArgs() is ["--sun-shadow-policy", var shadowRoot])
+            {
+                await ExerciseSunShadowPolicy(shadowRoot);
+                GetTree().Quit();
+                return;
+            }
             if (OS.GetCmdlineUserArgs() is ["--shader-sharing", var shaderRoot])
             {
                 await ExerciseShaderSharing(shaderRoot);

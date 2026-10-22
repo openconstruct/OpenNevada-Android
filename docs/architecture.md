@@ -257,6 +257,23 @@ freeze on the engine thread; one background writer replaces the complete file
 atomically, preserving open readers. Backpressure and write failures remain
 visible. Lightweight coverage queries do not replace canonical capture.
 
+The lightweight performance log also measures tracked viewports without enabling
+the live harness. Measurements are queried asynchronously on the render thread;
+their sample timestamp remains explicit. Render timings use a separate JSON line
+to avoid Android's per-line truncation of resource telemetry. Tracking unsubscribes
+and disables measurements at teardown. Diagnostic F6/F7/F8 probes with the FPS
+overlay vary sun shadow cascades, flat world resolution and outdoor view distance.
+Quality subscribers follow their environment/LOD lifetime and apply while paused.
+Four shadow cascades and the selected launch render scale remain the defaults.
+
+An explicit `--view-distance-meters` cap limits the outdoor camera after source
+LOD range expansion. The existing weather fog retains its color and curve, but
+its presentation interval contracts to finish before the cap; source-unit shader
+fog and Godot depth fog receive the same interval. No source declarations, saved
+weather state, reference admission, collisions or interaction ranges change.
+The Android handheld preset selects 200 metres; absent the flag, the source range
+is unchanged. This is a user-selected quality tradeoff, not matched retail pixels.
+
 The winning cell-child index is built once for each requested record signature.
 Subsequent cell queries visit only that cell's indexed children. The lab's
 all-cell sweep exercises the same index and lifetime owner as ordinary loading.

@@ -110,6 +110,8 @@ internal partial class RuntimePerformanceObserver : Node
         if (LogEnabled && Time.GetTicksMsec() - _lastLogMilliseconds >= 5000)
         {
             _lastLogMilliseconds = Time.GetTicksMsec();
+            var renderCost = SampleRenderCost();
+            if (renderCost is not null) GD.Print("OPENNV_RENDER_COST " + JsonSerializer.Serialize(renderCost));
             LogSnapshot();
         }
         _elapsedSeconds += delta;
@@ -122,6 +124,14 @@ internal partial class RuntimePerformanceObserver : Node
 
     public override void _ExitTree()
     {
+        if (LogEnabled)
+        {
+            GetTree().NodeAdded -= TrackViewport;
+            GetTree().NodeRemoved -= UntrackViewport;
+            foreach (var viewport in _viewports)
+                RenderingServer.ViewportSetMeasureRenderTime(viewport.GetViewportRid(), false);
+            _viewports.Clear();
+        }
         if (_reportPath is null || _reportWritten)
             return;
         if (_sampleCount == 0)

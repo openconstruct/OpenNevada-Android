@@ -1,4 +1,5 @@
 using Godot;
+using OpenNV.Runtime.Presentation.Rendering;
 
 namespace OpenNV.Runtime.Diagnostics.Performance;
 
@@ -44,5 +45,23 @@ internal sealed partial class RuntimeFpsOverlay : CanvasLayer
         if (_elapsed < .5) return;
         _elapsed = 0;
         _label.Text = $"{Engine.GetFramesPerSecond()} FPS";
+    }
+
+    public override void _UnhandledKeyInput(InputEvent @event)
+    {
+        if (@event is not InputEventKey { Pressed: true, Echo: false } key ||
+            OS.GetCmdlineUserArgs().Contains("--vr", StringComparer.Ordinal)) return;
+        if (key.Keycode == Key.F6)
+            RuntimeSunShadows.Set(RuntimeSunShadows.Cascades switch { 4 => 2, 2 => 1, 1 => 0, _ => 4 });
+        else if (key.Keycode == Key.F7)
+        {
+            var view = GetViewport();
+            var scale = view.Scaling3DScale > .76f ? "0.75" : view.Scaling3DScale > .51f ? "0.5" : "1";
+            RuntimeRenderScale.Apply(view, ["--render-scale-3d", scale], false);
+        }
+        else if (key.Keycode == Key.F8)
+            RuntimeViewDistance.Set(RuntimeViewDistance.Meters switch { null => 200, 200 => 100, 100 => 300, _ => null });
+        else return;
+        GetViewport().SetInputAsHandled();
     }
 }

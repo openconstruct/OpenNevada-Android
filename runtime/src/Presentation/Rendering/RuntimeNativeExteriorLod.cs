@@ -82,11 +82,19 @@ internal partial class RuntimeNativeExteriorLod : Node3D
         foreach (var resident in _cache.Values) BindDetail(resident.Materials);
     }
 
+    public override void _Ready() => RuntimeViewDistance.Changed += ApplyViewDistance;
+
+    private void ApplyViewDistance()
+    {
+        if (GetViewport().GetCamera3D() is { } camera)
+            RuntimeViewDistance.Apply(camera, Math.Max(camera.Far, ViewDistanceMeters));
+    }
+
     public override void _Process(double delta)
     {
         var camera = GetViewport().GetCamera3D();
         if (camera is null) return;
-        camera.Far = Math.Max(camera.Far, ViewDistanceMeters);
+        RuntimeViewDistance.Apply(camera, Math.Max(camera.Far, ViewDistanceMeters));
         var position = camera.GlobalPosition;
         NativeExteriorDetailBlend.SetRegion(position, 4096 * _units, _detailRadius, _completeCover);
         if (_read is { IsCompleted: true } read)
@@ -162,7 +170,11 @@ internal partial class RuntimeNativeExteriorLod : Node3D
         });
     }
 
-    public override void _ExitTree() => _readCancellation.Cancel();
+    public override void _ExitTree()
+    {
+        RuntimeViewDistance.Changed -= ApplyViewDistance;
+        _readCancellation.Cancel();
+    }
 
     internal Task StopSourceReads()
     {

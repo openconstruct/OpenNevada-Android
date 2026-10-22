@@ -48,7 +48,8 @@ if ($LASTEXITCODE -ne 0) { throw "OpenNV formatting or analyzer checks failed." 
 if ($LASTEXITCODE -ne 0) { throw "OpenNV Debug build failed." }
 
 $harnessOutput = Join-Path $repository "tmp\runtime-gate\live-harness"
-& dotnet build (Join-Path $repository "tools\OpenNV.LiveHarness\OpenNV.LiveHarness.csproj") --configuration Release --nologo --output $harnessOutput
+# Cross-compile this Windows diagnostic helper when the gate host is Unix.
+& dotnet build (Join-Path $repository "tools\OpenNV.LiveHarness\OpenNV.LiveHarness.csproj") --configuration Release --nologo --output $harnessOutput -p:EnableWindowsTargeting=true
 if ($LASTEXITCODE -ne 0) { throw "OpenNV live harness build failed." }
 
 $probes = @(

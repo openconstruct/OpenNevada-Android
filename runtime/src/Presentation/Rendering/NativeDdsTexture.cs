@@ -4,11 +4,14 @@ using OpenNV.Runtime.Formats.Gamebryo;
 
 namespace OpenNV.Runtime.Presentation.Rendering;
 
-internal static class NativeDdsTexture
+internal static partial class NativeDdsTexture
 {
     internal static Action<Image.Format, int, int, double, double>? UploadObserver { get; set; }
 
     internal static Texture2D Load(byte[] payload, string source, bool normal = false)
+        => LoadShared(payload, source, normal, LoadUnshared);
+
+    private static Texture2D LoadUnshared(byte[] payload, string source, bool normal)
     {
         if (FalloutDdsMipChain.ReadPartial(payload) is { } partial) return NativePartialMipTexture.Create(payload, partial);
         using var image = new Image();
@@ -24,6 +27,7 @@ internal static class NativeDdsTexture
         var observer = UploadObserver;
         var started = observer is null ? 0 : Stopwatch.GetTimestamp();
         var sourceFormat = image.GetFormat();
+        var sourceBytes = image.GetDataSize();
         var expanded = PreserveAlpha(image);
         var prepared = observer is null ? 0 : Stopwatch.GetTimestamp();
         var texture = ImageTexture.CreateFromImage(image);
@@ -33,6 +37,9 @@ internal static class NativeDdsTexture
         texture.SetMeta("opennv_dds_source_format", sourceFormat.ToString());
         texture.SetMeta("opennv_dds_upload_format", image.GetFormat().ToString());
         texture.SetMeta("opennv_dds_alpha_owner", expanded ? "BC1-encoded-texels;authored-mips-RGBA8" : "source-format");
+        texture.SetMeta("opennv_dds_upload_payload_bytes", image.GetDataSize());
+        texture.SetMeta("opennv_dds_source_payload_bytes", sourceBytes);
+        texture.SetMeta("opennv_dds_expanded_bc1", expanded);
         return texture;
     }
 

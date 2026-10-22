@@ -52,7 +52,25 @@ internal partial class RuntimePerformanceObserver : Node
             residentKiB,
             swapKiB,
             prototypes,
-            sourcePayloadCache = Content.RuntimeLiveContentSource.Current?.CacheState
+            sourcePayloadCache = Content.RuntimeLiveContentSource.Current?.CacheState,
+            textureSharing = Presentation.Rendering.NativeDdsTexture.SharingState
+        }));
+    }
+
+    private static void LogTextureCapabilities()
+    {
+        var device = RenderingServer.GetRenderingDevice();
+        if (device is null) { GD.Print("OPENNV_TEXTURE_FORMAT_SUPPORT renderingDevice=false"); return; }
+        const RenderingDevice.TextureUsageBits sample = RenderingDevice.TextureUsageBits.SamplingBit;
+        const RenderingDevice.TextureUsageBits image = sample | RenderingDevice.TextureUsageBits.CanUpdateBit;
+        GD.Print("OPENNV_TEXTURE_FORMAT_SUPPORT " + JsonSerializer.Serialize(new
+        {
+            bc1RgbSample = device.TextureIsFormatSupportedForUsage(RenderingDevice.DataFormat.Bc1RgbUnormBlock, sample),
+            bc1RgbImage = device.TextureIsFormatSupportedForUsage(RenderingDevice.DataFormat.Bc1RgbUnormBlock, image),
+            bc1RgbaSample = device.TextureIsFormatSupportedForUsage(RenderingDevice.DataFormat.Bc1RgbaUnormBlock, sample),
+            bc1RgbaUpload = device.TextureIsFormatSupportedForUsage(RenderingDevice.DataFormat.Bc1RgbaUnormBlock, sample | RenderingDevice.TextureUsageBits.CanCopyFromBit),
+            bc2Image = device.TextureIsFormatSupportedForUsage(RenderingDevice.DataFormat.Bc2UnormBlock, image),
+            bc3Image = device.TextureIsFormatSupportedForUsage(RenderingDevice.DataFormat.Bc3UnormBlock, image)
         }));
     }
 
@@ -83,6 +101,7 @@ internal partial class RuntimePerformanceObserver : Node
         _configurationSha256 = configurationSha256;
         _reportPath = reportPath;
         Name = "RuntimePerformanceObserver";
+        if (LogEnabled) RenderingServer.CallOnRenderThread(Callable.From(LogTextureCapabilities));
     }
 
     public override void _Process(double delta)

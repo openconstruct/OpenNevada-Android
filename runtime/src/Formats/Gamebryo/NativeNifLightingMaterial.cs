@@ -133,7 +133,10 @@ internal static class NativeNifLightingMaterial
             result.SetShaderParameter("use_environment", true);
             result.SetShaderParameter("environment_light_fade", environment.GetMeta("opennv_environment_light_fade"));
             foreach (var name in new[] { "environment_cube", "environment_mask", "use_environment_mask", "environment_scale" })
-                result.SetShaderParameter(name, environment.GetShaderParameter(name));
+            {
+                using var parameter = environment.GetShaderParameter(name);
+                result.SetShaderParameter(name, parameter);
+            }
         }
         else if (textures.NextPass is not null)
             throw new NotSupportedException("Source SLS next pass has no composition owner.");
@@ -141,7 +144,7 @@ internal static class NativeNifLightingMaterial
         SetTexture(result, "normal", textures.NormalTexture);
         SetTexture(result, "emissive", textures.EmissionTexture);
         result.SetShaderParameter("use_parallax", height is not null);
-        if (height is not null) result.SetShaderParameter("height_map", height);
+        if (height is not null) NativeVariant.SetShaderParameter(result, "height_map", height);
         var color = textures.AlbedoColor;
         var hair = (source.ShaderFlags & FalloutNpcAppearanceHairColor.ShaderFlag) != 0;
         result.SetShaderParameter("use_hair", hair);
@@ -178,7 +181,7 @@ internal static class NativeNifLightingMaterial
 
     internal static void SetTexture(ShaderMaterial material, string slot, Texture2D? texture)
     {
-        if (texture is not null) material.SetShaderParameter(slot + "_map", texture);
+        if (texture is not null) NativeVariant.SetShaderParameter(material, slot + "_map", texture);
         material.SetShaderParameter("use_" + slot + "_map", texture is not null);
     }
 

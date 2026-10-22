@@ -12,6 +12,12 @@ public partial class NativeNifInstanceAudit : Node
     {
         try
         {
+            if (OS.GetCmdlineUserArgs() is ["--dds-sharing", var sharingRoot])
+            {
+                await ExerciseDdsSharing(sharingRoot);
+                GetTree().Quit();
+                return;
+            }
             if (OS.GetCmdlineUserArgs() is ["--performance-policy", var performanceRoot])
             {
                 await ExercisePerformancePolicy(performanceRoot);

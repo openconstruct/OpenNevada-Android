@@ -45,9 +45,9 @@ internal static class NativeNifLodMaterial
             var loaded = NativeOwnedMediaLoader.LoadTexture(path);
             cache[path] = new(loaded); return loaded;
         }
-        material.SetShaderParameter("base_map", Texture(textures.Textures[0]));
+        NativeVariant.SetShaderParameter(material, "base_map", Texture(textures.Textures[0]));
         if (textures.Textures[1].Length != 0)
-            material.SetShaderParameter("normal_map", Texture(textures.Textures[1]));
+            NativeVariant.SetShaderParameter(material, "normal_map", Texture(textures.Textures[1]));
         material.SetShaderParameter("use_normal_map", textures.Textures[1].Length != 0);
         material.SetShaderParameter("landscape", landscape);
         material.SetMeta("opennv_nif_shader_flags", declaration.ShaderFlags);

@@ -105,10 +105,10 @@ internal static class NativeFaceGenMaterial
         if (!Shaders.TryGetValue(code, out var compiled))
             Shaders.Add(code, compiled = new Shader { Code = code });
         var result = new ShaderMaterial { Shader = compiled, ResourceName = ResourceIdentity };
-        result.SetShaderParameter("base_map", Load(content, inputs.BaseTexturePath));
-        result.SetShaderParameter("normal_map", Load(content, inputs.NormalTexturePath));
-        result.SetShaderParameter("base_mod_map", Load(content, inputs.BaseMod));
-        result.SetShaderParameter("detail_mod_map", Load(content, inputs.DetailMod));
+        NativeVariant.SetShaderParameter(result, "base_map", Load(content, inputs.BaseTexturePath));
+        NativeVariant.SetShaderParameter(result, "normal_map", Load(content, inputs.NormalTexturePath));
+        NativeVariant.SetShaderParameter(result, "base_mod_map", Load(content, inputs.BaseMod));
+        NativeVariant.SetShaderParameter(result, "detail_mod_map", Load(content, inputs.DetailMod));
         result.SetShaderParameter("use_source_vertex_color", (shader.ShaderFlags2 & VertexColorsFlag) != 0);
         result.SetShaderParameter("source_specular", material is null || (shader.ShaderFlags & SpecularFlag) == 0 ? Vector3.Zero :
             new Vector3(material.Specular.R, material.Specular.G, material.Specular.B));

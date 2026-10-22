@@ -18,7 +18,8 @@ APK 0.1.18/code 19 is installed for acceptance, SHA-256
 `361fad88b25769fffdc08bbb755b6b85f8c12ad88d79508dfe220c9c7a610e7f`.
 Owned Pip-Boy/source-color/controller audits, Android export and v2/v3 signatures
 pass. The final required full runtime gate and handheld display check pass.
-Physical Pip-Boy controller acceptance is pending.
+The owner confirmed physical Pip-Boy page/tab/row navigation, A activation
+and B close back to gameplay on code 19.
 The previous code-18 container build passed its required gate; the owner confirmed
 physical D-pad selection, A transfer and B close on that build.
 
@@ -58,12 +59,14 @@ DATA initially selects quests, which remains usable in interiors; world-map exit
 routing inside an interior and other unsupported pages still fail visibly.
 XR pointer behavior and authoritative inventory/quest owners remain shared.
 Owned paused-subviewport input and color audits and final Android export pass;
-the final required full runtime gate passes; physical controller acceptance is pending.
+the final required full runtime gate passes. The owner confirmed every requested
+physical Pip-Boy control, including B returning to gameplay.
 Code-19 PID 22188 loaded the current interior checkpoint, then ordinary Tab opened
 Pip-Boy at 19:58:10. A handheld frame confirmed visible source text/art, focus
 outline and readable controller hints at 1280x720. It was inspected/deleted.
 Menu rendering is still about 11 FPS; the display fix is not a performance result.
-Physical controller acceptance is requested; leave this session for the owner.
+The owner answered "All work" for LB/RB pages, left/right tabs, up/down selection,
+A activation and B close back to gameplay. Leave the current session running.
 The private diagnostic APK is not the deliverable.
 
 ## Reported first-aid-box failure
@@ -157,7 +160,7 @@ Prior container gate/audit: work/opennv-container-final-{runtime-gate,owned}.log
 Code-17 report: work/opennv-loot-freeze.private.log
 Code-18 physical test: work/opennv-device-v18.private.log
 
-1. Finish physical Pip-Boy controls acceptance, then broaden physical looting coverage: quantity choices, paging, Take All and
+1. Broaden physical looting coverage: quantity choices, paging, Take All and
    other containers. Basic selection/transfer/close is physically accepted.
 2. Attribute active CPU update cost, remove repeated unchanged work, and profile
    mesh/material batching plus shader/terrain cost. Sustained 30 FPS is unachieved.

@@ -36,6 +36,10 @@ internal sealed class FalloutExteriorGrid(FalloutPluginStack records)
         return cell;
     }
 
+    internal FalloutExteriorGridScene ResolveOwned(FalloutFormKey world, FalloutFormKey persistentCell,
+        float x, float y, FalloutInstallationSettings settings) =>
+        Resolve(world, persistentCell, x, y, checked((int)settings.Unsigned("General", "uGridsToLoad")));
+
     internal FalloutExteriorGridScene Resolve(FalloutFormKey world, FalloutFormKey persistentCell, float x, float y, int diameter)
     {
         lock (_gate) return ResolveCore(world, persistentCell, x, y, diameter);

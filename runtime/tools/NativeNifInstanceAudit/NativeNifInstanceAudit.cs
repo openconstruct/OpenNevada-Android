@@ -12,6 +12,12 @@ public partial class NativeNifInstanceAudit : Node
     {
         try
         {
+            if (OS.GetCmdlineUserArgs() is ["--performance-policy", var performanceRoot])
+            {
+                await ExercisePerformancePolicy(performanceRoot);
+                GetTree().Quit();
+                return;
+            }
             if (OS.GetCmdlineUserArgs() is ["--hud-placement", var hudRoot, var hudFrame, "--compact-quest-notices"])
             {
                 await ExerciseHudPlacement(hudRoot, hudFrame);

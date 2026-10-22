@@ -376,10 +376,10 @@ public partial class RuntimeCoordinator
     {
         _nativeExteriorGrid ??= new(_nativePluginStack!);
         var settings = FalloutInstallationSettings.Read(RuntimeLiveContentSource.Current!);
-        var diameter = checked((int)settings.Unsigned("General", "uGridsToLoad"));
-        diameter = Math.Max(diameter, _configuration.World.MinimumExteriorGridDiameter);
-        return _nativeExteriorGrid.Resolve(world, _nativeExteriorGrid.PersistentCell(world),
-            position[0], position[1], diameter);
+        var grid = _nativeExteriorGrid.ResolveOwned(world, _nativeExteriorGrid.PersistentCell(world),
+            position[0], position[1], settings);
+        GD.Print($"OPENNV_EXTERIOR_GRID_POLICY diameter={grid.Radius * 2 + 1} cells={grid.Cells.Count} references={grid.Scene.References.Count} source=owned-General-uGridsToLoad");
+        return grid;
     }
 
     private void AddExteriorLandscape(Node3D root, FalloutExteriorGridScene grid)

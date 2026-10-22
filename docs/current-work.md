@@ -34,34 +34,38 @@ The device has Android 14/API 34, ARM64, about 3.57 GiB physical memory and
 2.5 GiB LZ4 zram, with Turnip Adreno 610. Its 277 private installation files were
 SHA-256 verified against the owner's host install; do not transfer them again.
 
-## Current block
+## Current performance block
 
-Prepare APK 0.1.7/code 8:
+Prepare APK 0.1.8/code 9. The owner reports about 20 FPS subjectively with bloom
+off, but no measured frame-rate baseline exists. The second exterior attempt
+also ended with Android LOW_MEMORY (PID 22798, about 2.0 GB reported PSS). A
+sample immediately before it had about 1.85 GiB swapped out. The ordinary save
+from stage 110 remains the continuation point.
 
-- Share a functional tag/trait selection control with initial and visible focus,
-  explicit D-pad navigation, A select/unselect, X confirmation, and scrolling.
-  Original C# selection limits and validation stay authoritative. Exact tag
-  count, optional zero traits, rejection at the limit and deselection are tested.
-- Disable bloom at the owner's request, in addition to automatic exposure,
-  source blur and double vision. Skip bloom targets/downsampling/blur passes;
-  preserve cinematic color, tint, fades and output color conversion. Other
-  presentation modes retain defaults. Release compositor resources explicitly on
-  cell presentation teardown; the GPU fixture exposed retained shader/pipeline
-  allocations. This does not establish an exterior memory fix. Correct the
-  obsolete image-space summary
-  to report the actual automatic-exposure policy.
-- Place quest updates in the upper-left safe inset for the handheld, explicitly
-  requested by the owner. This is an OpenNV presentation policy; original native
-  placement is unbound. Measure wrapped title height before placing objectives,
-  preventing text overlap. Preserve source text, event order and notification time.
+Concrete source divergences found:
 
-Owned selection, GPU effects and HUD placement checks pass, as does the full
-runtime gate. The effects fixture exits without its earlier RID leak warnings.
-The 720p HUD preview was inspected and deleted. Signed ARM64 export completes
-without warnings or errors and its v2/v3 signature verifies. Installation is verified as
-0.1.7/code 8. Ordinary device acceptance of these menus is still pending. Keep a
-handoff note and experimental APK in the task outputs. Do not interrupt a resumed
-playtest when installing; coordinate with the owner if it has restarted.
+- The runtime forced a minimum 7x7 exterior grid despite the owned default INI
+  requesting 5x5. Remove that artificial floor and let owned uGridsToLoad drive
+  residency through the existing grid resolver. Source identity, spatial
+  admission, collision and continued streaming remain the same owners.
+- The signed Android development export compiled C# with Optimize=false. Enable
+  managed optimization for Android without changing desktop Debug configuration.
+- Apply the owner's selected 0.75 scale to flat-world 3D only: 960x540 internal
+  rendering, 1280x720 UI/output. Restore scale 1 for XR and reject invalid scales.
+- Add opt-in, sparse performance/memory logging and door-loading checkpoints.
+  Report actual managed optimization, FPS/process/physics time, draw calls,
+  managed/Godot/video memory, Linux RSS/swap and source payload cache state.
+  Frame capture stays off; disabled logging does no sampling work.
+
+The owned grid/render-extent audit and full runtime gate pass. The selected
+graph is 25 cells/2,337 references versus the earlier 49/3,683; these counts are
+not device memory or gameplay proof. Vulkan confirms 960x540 internal 3D with
+1280x720 UI/output. Android ExportDebug properties report Optimize=true/net9.0.
+Finish signed export and publication of the checked candidate. Installation
+and ordinary cold Continue/exterior retry remain necessary to establish device
+performance or an exterior-memory fix. The default source cache is still a
+512 MiB budget; do not equate that budget with measured bytes or reduce it
+without checking the new memory checkpoints.
 
 ## Next divergence owners
 

@@ -3,6 +3,8 @@
     <TargetFramework>net8.0</TargetFramework>
     <!-- Godot 4.7.2's non-Gradle Android template requires this framework. -->
     <TargetFramework Condition="'$(GodotTargetPlatform)' == 'android'">net9.0</TargetFramework>
+    <!-- Keep the signed development package, but optimize its Android C# code. -->
+    <Optimize Condition="'$(GodotTargetPlatform)' == 'android'">true</Optimize>
     <AssemblyName>OpenNV</AssemblyName>
     <RootNamespace>OpenNV</RootNamespace>
     <LangVersion>latest</LangVersion>

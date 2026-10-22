@@ -7,6 +7,55 @@ namespace OpenNV.Runtime.Diagnostics.Performance;
 
 internal partial class RuntimePerformanceObserver : Node
 {
+    private static readonly bool LogEnabled = OS.GetCmdlineUserArgs().Contains("--performance-log", StringComparer.Ordinal);
+    private static string _phase = "startup";
+    private ulong _lastLogMilliseconds;
+
+    internal static void Mark(string phase, int? prototypes = null)
+    {
+        if (!LogEnabled) return;
+        _phase = phase;
+        LogSnapshot(prototypes);
+    }
+
+    private static void LogSnapshot(int? prototypes = null)
+    {
+        var optimized = !(typeof(RuntimePerformanceObserver).Assembly
+            .GetCustomAttributes(typeof(System.Diagnostics.DebuggableAttribute), false)
+            .OfType<System.Diagnostics.DebuggableAttribute>().SingleOrDefault()?.IsJITOptimizerDisabled ?? false);
+        long? residentKiB = null, swapKiB = null;
+        try
+        {
+            if (File.Exists("/proc/self/status"))
+                foreach (var line in File.ReadLines("/proc/self/status"))
+                {
+                    if (!line.StartsWith("VmRSS:", StringComparison.Ordinal) && !line.StartsWith("VmSwap:", StringComparison.Ordinal)) continue;
+                    var value = long.Parse(line.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)[1], System.Globalization.CultureInfo.InvariantCulture);
+                    if (line.StartsWith("VmRSS:", StringComparison.Ordinal)) residentKiB = value;
+                    else swapKiB = value;
+                }
+        }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
+        GD.Print("OPENNV_PERFORMANCE " + JsonSerializer.Serialize(new
+        {
+            phase = _phase,
+            elapsedMilliseconds = Time.GetTicksMsec(),
+            optimizedManagedCode = optimized,
+            fps = Godot.Performance.GetMonitor(Godot.Performance.Monitor.TimeFps),
+            processMilliseconds = 1000 * Godot.Performance.GetMonitor(Godot.Performance.Monitor.TimeProcess),
+            physicsMilliseconds = 1000 * Godot.Performance.GetMonitor(Godot.Performance.Monitor.TimePhysicsProcess),
+            drawCalls = Godot.Performance.GetMonitor(Godot.Performance.Monitor.RenderTotalDrawCallsInFrame),
+            managedBytes = GC.GetTotalMemory(false),
+            godotStaticBytes = Godot.Performance.GetMonitor(Godot.Performance.Monitor.MemoryStatic),
+            videoBytes = Godot.Performance.GetMonitor(Godot.Performance.Monitor.RenderVideoMemUsed),
+            residentKiB,
+            swapKiB,
+            prototypes,
+            sourcePayloadCache = Content.RuntimeLiveContentSource.Current?.CacheState
+        }));
+    }
+
     private RuntimePerformanceConfiguration _configuration = null!;
     private string _configurationSchema = "";
     private string _configurationSha256 = "";
@@ -38,6 +87,11 @@ internal partial class RuntimePerformanceObserver : Node
 
     public override void _Process(double delta)
     {
+        if (LogEnabled && Time.GetTicksMsec() - _lastLogMilliseconds >= 5000)
+        {
+            _lastLogMilliseconds = Time.GetTicksMsec();
+            LogSnapshot();
+        }
         _elapsedSeconds += delta;
         if (_elapsedSeconds < _configuration.SampleIntervalSeconds)
             return;

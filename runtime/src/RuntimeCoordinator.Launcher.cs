@@ -41,6 +41,7 @@ public partial class RuntimeCoordinator
             request.ModSelection?.WriteOptions(_options);
             if (request.EngineCampaign is "fallout-new-vegas" or "fallout-3")
                 _options["opening-menu"] = "true";
+            Presentation.Rendering.RuntimeRenderScale.Apply(GetViewport(), OS.GetCmdlineUserArgs(), request.Presentation == "openxr");
             if (request.Presentation == "openxr")
             {
                 _options["vr"] = "true";

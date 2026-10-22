@@ -9,6 +9,7 @@ using OpenNV.Runtime.Presentation.Rendering;
 using OpenNV.Runtime.World.Cells;
 using OpenNV.Runtime.World.Actors;
 using OpenNV.Runtime.Diagnostics.Parity;
+using OpenNV.Runtime.Diagnostics.Performance;
 using OpenNV.Runtime.Presentation.Ui;
 using OpenNV.Runtime.World;
 
@@ -530,6 +531,7 @@ public partial class RuntimeCoordinator
             AddNativePlayer(cell);
         SetNativeActiveCell(root, activeScene);
         if (!fallout3) AddNativeGameplayHud();
+        RuntimePerformanceObserver.Mark("world-ready", _nativeNifPrototypes.Count);
         GD.Print(
             $"OPENNV_NATIVE_ACTIVE_CELL cell={activeScene.Cell.FormKey} " +
             $"restored={(restore is not null)} sourceSide={sourceSide}");
@@ -789,6 +791,7 @@ public partial class RuntimeCoordinator
             var built = prototype.Scene;
             prototype.Scene.Root.Name = $"Prototype_{baseObject.FormKey}";
             _nativeNifPrototypes.Add(baseObject.ModelPath, prototype);
+            if (_nativeNifPrototypes.Count % 25 == 0) RuntimePerformanceObserver.Mark("model-preparation", _nativeNifPrototypes.Count);
             GD.Print(
                 $"OPENNV_NATIVE_NIF_READY model={baseObject.ModelPath} source={nifSource} " +
                 $"nodes={built.Nodes} surfaces={built.Surfaces} vertices={built.Vertices} triangles={built.Triangles} " +
@@ -881,6 +884,7 @@ public partial class RuntimeCoordinator
     private async System.Threading.Tasks.Task StreamNativeDoorTransition(
         FalloutPlacedReference reference)
     {
+        RuntimePerformanceObserver.Mark("door-begin", _nativeNifPrototypes.Count);
         var current = _nativeCurrentCellRoot ??
             throw new InvalidOperationException("Native door activation has no current CELL root.");
         var active = _nativeActiveCell ??
@@ -903,10 +907,13 @@ public partial class RuntimeCoordinator
         {
             targetScene = _nativeReferences!.ComposeResidency(targetScene, grid?.Cells);
             if (grid is not null) grid = grid with { Scene = targetScene };
+            RuntimePerformanceObserver.Mark("door-scene-composed", _nativeNifPrototypes.Count);
             sky.EnterCell(targetScene.Cell, _nativeGlobals, entry.Position);
             targetRoot = BuildNativeCellRoot(targetScene, null, sourceSide: false);
+            RuntimePerformanceObserver.Mark("door-models-ready", _nativeNifPrototypes.Count);
             targetRoot.ProcessMode = ProcessModeEnum.Disabled;
             if (grid is not null) AddExteriorLandscape(targetRoot, grid);
+            RuntimePerformanceObserver.Mark("door-landscape-ready", _nativeNifPrototypes.Count);
             AddChild(targetRoot);
             if (targetScene.Cell.Lighting is not null) AddNativeCellEnvironment(targetRoot, targetScene);
             else AddExteriorEnvironment(targetRoot, targetScene.Cell);
@@ -943,6 +950,7 @@ public partial class RuntimeCoordinator
         foreach (var (body, mode) in arrivalCollision) body.DisableMode = mode;
         current.ProcessMode = ProcessModeEnum.Disabled;
         current.QueueFree();
+        RuntimePerformanceObserver.Mark("door-committed-source-deletion-queued", _nativeNifPrototypes.Count);
         _nativeOpeningStageDriver!.PersistWorldState(targetScene.Cell.FormKey);
         GD.Print(
             $"OPENNV_NATIVE_DOOR_STREAM source={active.Cell.FormKey} destination={targetScene.Cell.FormKey} " +

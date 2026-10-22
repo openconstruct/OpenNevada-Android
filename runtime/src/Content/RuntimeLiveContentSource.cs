@@ -19,7 +19,8 @@ internal sealed class RuntimeLiveContentSource : IDisposable
         new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, string> _archiveResources =
         new(StringComparer.OrdinalIgnoreCase);
-    private readonly SourcePayloadCache _payloads = new(512L * 1024 * 1024);
+    // This bounds retained source bytes, not decoded resources or total process RAM.
+    private readonly SourcePayloadCache _payloads = new((OperatingSystem.IsAndroid() ? 128L : 512L) * 1024 * 1024);
     private readonly ConcurrentDictionary<string, string> _archiveWinners =
         new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, LoosePayload> _loosePayloads =
@@ -510,8 +511,8 @@ internal sealed class RuntimeLiveContentSource : IDisposable
         private readonly object _gate = new();
         private readonly Dictionary<string, LinkedListNode<(string Key, byte[] Data)>> _entries = new(StringComparer.OrdinalIgnoreCase);
         private readonly LinkedList<(string Key, byte[] Data)> _lru = [];
-        private long _bytes, _hits, _misses;
-        internal object State { get { lock (_gate) return new { bytes = _bytes, budgetBytes, entries = _entries.Count, hits = _hits, misses = _misses }; } }
+        private long _bytes, _hits, _misses, _evictions, _evictedBytes;
+        internal object State { get { lock (_gate) return new { bytes = _bytes, budgetBytes, entries = _entries.Count, hits = _hits, misses = _misses, evictions = _evictions, evictedBytes = _evictedBytes, accounting = "retained-source-payload-bytes-only" }; } }
         internal long Bytes { get { lock (_gate) return _bytes; } }
 
         internal byte[] GetOrAdd(string key, Func<string, byte[]> read)
@@ -532,6 +533,7 @@ internal sealed class RuntimeLiveContentSource : IDisposable
                 if (data.LongLength > budgetBytes) return data;
                 while (_bytes + data.LongLength > budgetBytes && _lru.First is { } oldest)
                 {
+                    ++_evictions; _evictedBytes += oldest.Value.Data.LongLength;
                     _entries.Remove(oldest.Value.Key); _bytes -= oldest.Value.Data.LongLength; _lru.RemoveFirst();
                 }
                 _entries.Add(key, _lru.AddLast((key, data))); _bytes += data.LongLength;

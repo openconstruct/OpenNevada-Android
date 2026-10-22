@@ -41,17 +41,41 @@ about 2.2 GB, during model preparation and before model-ready/commit. At the las
 budget, managed allocation was about 503 MB and swap about 2.0 GiB. These memory
 counters overlap; do not sum them as separate physical allocations. Loading-phase
 FPS/video counters may be stale while synchronous preparation blocks drawing.
-The cache was not full; reducing its budget alone is not an evidenced fix.
+The cache was not full; reducing its budget alone is not an evidenced crash fix.
 Unsupported exterior controller sequence chains remain visible.
 
-## Current diagnostic block
+## Current cache-budget block
 
-APK 0.1.9/code 10 is installed with data preserved. The opt-in --fps-overlay
-is enabled in its preset. It displays
-engine FPS at the top right on the native-resolution canvas, samples twice per
-second, continues when paused and ignores pointer/controller focus. It neither
-caps FPS nor establishes a performance improvement. Keep the same APK/save when
-comparing the owner's Turnip auto, prefer-sysmem and prefer-gmem settings.
+The owner requests a smaller cache and authorizes restarting from the title.
+APK 0.1.10/code 11 is installed with registered data preserved. Its Android
+source payload cache is reduced from
+512 MiB to 128 MiB. Desktop retains 512 MiB. Existing LRU eviction, oversized
+resource bypass and source rereads retain their behavior; source selection and
+content are unchanged. Eviction counts/bytes and an explicit accounting label
+clarify telemetry. The byte counter measures only retained source payloads,
+not managed object overhead, in-flight reads, caller-held arrays, decoded NIFs
+or GPU resources. Eviction removes cache ownership; it cannot free data still
+held by readers. No immediate 384 MiB saving or exterior-memory fix is claimed.
+More rereads can increase loading time; measure the actual tradeoff on-device.
+Device startup confirms budgetBytes=134217728 and the new accounting label.
+The save SHA-256 is unchanged across install. The active driver now identifies
+Qualcomm Adreno 610/Vulkan 1.1.295 rather than the earlier Turnip/Vulkan 1.0.328;
+no driver setting was changed by this work. Performance comparisons across
+those runs are confounded by that driver difference.
+
+Physical code-11 Continue restored the save in about 56 seconds; first compositor
+output arrived about 102 seconds after Continue. The stationary interior view
+reported roughly 27–30 FPS, without a sustained-30 gameplay claim. A temporary
+frame confirmed the room and top-right counter; it was deleted. Ordinary movement
+and activation then opened the exit. During exterior preparation the source
+cache stayed below 128 MiB and evicted 397 entries/about 53 MiB by prototype 350.
+Android still killed PID 27243 for LOW_MEMORY at about 2.2 GB reported PSS before
+model-ready/commit. The smaller cap works but does not fix exterior loading. The
+save is preserved; duplicate texture uploads and transition overlap remain next.
+
+The top-right FPS overlay remains enabled, with 960x540 3D and native 1280x720
+UI/output. Keep the same APK/save when comparing driver settings. The latest
+physical gameplay measurement remains 20–22 FPS on code 9, not a 30 FPS result.
 
 Ordinary NIF material loading currently creates DDS textures repeatedly, and
 animated prototype instances rebuild materials/controllers. Investigate sharing
@@ -78,11 +102,27 @@ source residency speculatively.
 
 The FPS overlay passes the selected owned grid/Vulkan audit: native top-right
 bounds at 1280x720 with 960x540 3D, no pointer interception, and numeric engine
-FPS sampling while paused. The full required runtime gate passes. These checks
+FPS sampling while paused. The earlier FPS block's full required runtime gate passed. These checks
 do not establish device performance gains.
 
-This block passed Release/Debug builds, formatting/analyzers, the full contract
+Earlier UI work passed Release/Debug builds, formatting/analyzers, the full contract
 and native Godot gate, and selected owned-data diagnostics. Its owned controller
 choices and GPU effects diagnostics exit without warnings. Earlier menu-input
 diagnostics reported two leaked ObjectDB instances; that separate issue is open.
 No retail files, saves, executables or derivatives enter the repository/package.
+
+## Desktop graphics boundary
+
+The owner confirmed recovery from the desktop lockup. Kernel logs showed AMD
+flip/commit timeouts and Xorg/amdgpu warnings during the desktop Vulkan fixture;
+it was stopped without a result. Do not repeat desktop GPU fixtures or reset
+the desktop display/GPU. Use CPU-only/headless checks and handheld rendering.
+The complete required headless gate has since passed, including Release/Debug,
+formatting/analyzers, cache LRU contracts and native Godot audits. The selected
+owned installation/source audit also passes without opening a desktop window.
+
+Code 10 reload PID 26721 restored the saved state but stalled before the first
+world frame. Drawing resumed about 46 seconds later; telemetry then reported
+21–28 FPS. The loading overlay's 58 FPS was stale. This was a long first-frame
+stall, not a new LOW_MEMORY death. Its precise owner remains unisolated. The
+owner authorized replacing the running session and restarting from the save.

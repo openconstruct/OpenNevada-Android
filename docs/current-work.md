@@ -74,7 +74,9 @@ selection and overlapping input need acceptance checks.
    Touch New Game already opens confirmation in the prior device build.
    The full runtime gate and owned menu-input audit pass with clean logs. The
    APK exports cleanly, installs as version code 3, cold-starts and retains the
-   registered installation. Physical-controller confirmation is still pending.
+   registered installation. The owner confirms visible D-pad focus. Device
+   input reaches New Game confirmation and accepts it; loading then fails on
+   the missing desktop `RendererInfo.txt`. Gameplay controls remain unverified.
 2. Resolve the missing owned HUD settings. The start-menu UI becomes visible
    after loading; that HUD error does not itself prevent start-menu selection.
 3. Trace the six remaining missing references and other loading divergences.

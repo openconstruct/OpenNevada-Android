@@ -182,6 +182,14 @@ equipment changes and quest/map state remain C# authority. Unspent character
 creation state can be saved, while active interaction
 continuations still fail visibly instead of being discarded.
 
+Container menus own row focus and paging independently on the player and source
+sides. Gamepad input enters the same transfer and quantity owners as keyboard
+and touch; it cannot bypass quantity selection or inventory revalidation. A
+quantity modal restores the parent row focus on cancellation and keeps the
+parent's transfer shortcuts inactive. Stick hysteresis advances one row per
+deflection. Focus and control hints remain visible while flat gameplay is paused;
+closing restores the existing coordinator pause/input state and save path.
+
 RuntimeNativePlayerActor owns the player's equipped source skeleton, body, hand
 variants, weapon model and KF palette. First/third-person views share inventory
 and physics state. Animated equipment cannot also run dropped-object physics.

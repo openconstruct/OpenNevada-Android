@@ -10,7 +10,8 @@ are not parity or complete gameplay proof.
 
 ## Installed and observed
 
-APK 0.1.6/code 7 is the installed baseline. The owner completed SPECIAL,
+APK 0.1.7/code 8 is now installed; the following gameplay observations are from
+the preceding APK 0.1.6/code 7. The owner completed SPECIAL,
 word association, inkblots, tag skills and traits, reaching Doc's farewell at
 VCG01 stage 110, and later stage 200 before the door attempt. Tag/trait selection needed touchscreen input. Save at stage 110
 was written successfully, then selected through the ordinary save browser.
@@ -57,8 +58,8 @@ Prepare APK 0.1.7/code 8:
 Owned selection, GPU effects and HUD placement checks pass, as does the full
 runtime gate. The effects fixture exits without its earlier RID leak warnings.
 The 720p HUD preview was inspected and deleted. Signed ARM64 export completes
-without warnings or errors and its v2/v3 signature verifies. Publication and
-installation are in progress. Keep a
+without warnings or errors and its v2/v3 signature verifies. Installation is verified as
+0.1.7/code 8. Ordinary device acceptance of these menus is still pending. Keep a
 handoff note and experimental APK in the task outputs. Do not interrupt a resumed
 playtest when installing; coordinate with the owner if it has restarted.
 

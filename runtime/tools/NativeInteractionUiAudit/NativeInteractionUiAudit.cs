@@ -1,4 +1,6 @@
 using Godot;
+using OpenNV.Runtime;
+using OpenNV.Runtime.InputSystem;
 using OpenNV.Runtime.Content;
 using OpenNV.Runtime.Gameplay.State;
 using OpenNV.Runtime.Presentation.Ui;
@@ -13,6 +15,7 @@ public partial class NativeInteractionUiAudit : Node
             var args = OS.GetCmdlineUserArgs();
             if (args.Length is not (2 or 3)) throw new ArgumentException("Expected owned root, CELL editor ID, and optional diagnostic PNG path.");
             var root = args[0]; var cellId = args[1];
+            GamepadInputMap.Configure(RuntimeConfiguration.Load().Player.DesktopInput);
             RuntimeLiveContentSource.Configure(root, RuntimeLiveContentSource.FalloutNewVegasGame);
             using var content = RuntimeLiveContentSource.Current!;
             using var records = FalloutPluginStack.Load(content.PluginSources);
@@ -133,7 +136,9 @@ public partial class NativeInteractionUiAudit : Node
                 throw new InvalidDataException("A stack below the source threshold did not transfer one item.");
             GD.Print("OPENNV_NATIVE_QUANTITY_UI_PASS sourceTemplates=true cancel=true modal=true partialTransfer=true staleChoice=true smallStack=true coldCounts=true");
             GD.Print("OPENNV_NATIVE_INTERACTION_UI_PASS sourceTemplates=true targetActions=true containerLists=true pickupState=true ordinaryInput=unverified pixels=unverified");
-            menu.Free(); hud.Free(); GetTree().Quit();
+            menu.Free(); hud.Free();
+            await ExerciseControllerContainers(records, globals, item.Base);
+            GetTree().Quit();
         }
         catch (Exception error) { GD.PushError($"OPENNV_NATIVE_INTERACTION_UI_FAIL {error}"); GetTree().Quit(1); }
     }

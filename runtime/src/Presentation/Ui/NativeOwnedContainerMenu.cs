@@ -48,7 +48,7 @@ internal partial class NativeOwnedContainerMenu : Control
     }
     public override void _Ready()
     {
-        try { Refresh(); }
+        try { AddControllerHints(); Refresh(); }
         catch (Exception error) { Error = error.Message; GD.PushError($"OPENNV_CONTAINER_UI_FAIL {error.Message}"); }
     }
     private NativeViewportLayout? _viewportLayout;
@@ -59,6 +59,7 @@ internal partial class NativeOwnedContainerMenu : Control
         var font = _tiles.Font(tile.DescendantsAndSelf("text").FirstOrDefault() ?? tile);
         var button = new NativeBitmapMenuButton(font.Font, font.Atlas, _tiles.Color) { Text = label, DrawText = false };
         button.Pressed += activate; AddChild(button); _targets.Add((tile, button));
+        button.FocusEntered += QueueRedraw; button.FocusExited += QueueRedraw;
     }
     private void Close() { if (_closed) return; _closed = true; _close(); }
     private void Move(int side, FalloutCampaignItem item)
@@ -72,8 +73,12 @@ internal partial class NativeOwnedContainerMenu : Control
         {
             var menu = _quantity!; _quantity = null;
             RemoveChild(menu); menu.QueueFree();
+            _stick = default;
+            _controllerHints.Visible = OS.HasFeature("android") || Input.GetConnectedJoypads().Count != 0;
             if (count is { } selected) Transfer(side, item.FormKey, selected);
+            else FocusSelection();
         });
+        _controllerHints.Visible = false;
         AddChild(_quantity);
     }
     private void Transfer(int side, FalloutFormKey form, int count)
@@ -120,12 +125,14 @@ internal partial class NativeOwnedContainerMenu : Control
                 var label = item.Count == 1 ? name : $"{name} ({item.Count})";
                 _tiles.Text[text] = label;
                 var font = _tiles.Font(text);
-                var button = new NativeBitmapMenuButton(font.Font, font.Atlas, _tiles.Color) { Text = label, DrawText = false };
+                var button = new NativeBitmapMenuButton(font.Font, font.Atlas, _tiles.Color)
+                { Name = $"ContainerRow_{side}_{_offsets[side] + index}", Text = label, DrawText = false };
                 var selectedSide = side;
                 button.Pressed += () => Move(selectedSide, item);
                 void Select()
                 {
                     _side = selectedSide;
+                    _selection[_side] = _offsets[_side] + index;
                     _tiles.Bind(list, "_highlight_y", index * 56); _tiles.Bind(list, "_selected_height", 56);
                     QueueRedraw();
                 }
@@ -134,12 +141,14 @@ internal partial class NativeOwnedContainerMenu : Control
             }
         }
         Layout();
+        FocusSelection();
     }
     private void Layout()
     {
         if (!IsInsideTree()) return;
         var scale = GetViewportRect().Size.Y / 960;
         Scale = Vector2.One * scale; Size = _tiles.Screen = GetViewportRect().Size / scale; _tiles.ResolutionConverter = 1 / scale;
+        LayoutControllerHints();
         foreach (var (tile, button) in _targets.Concat(_rows))
         { button.Position = _tiles.Position(tile); button.Size = new(_tiles.Number(tile, "width"), _tiles.Number(tile, "height")); }
         _tiles.ValidateDrawing();
@@ -148,20 +157,26 @@ internal partial class NativeOwnedContainerMenu : Control
     public override void _Input(InputEvent inputEvent)
     {
         if (_quantity is not null || _closed) return;
+        if (ControllerInput(inputEvent)) { GetViewport().SetInputAsHandled(); return; }
         if (inputEvent is InputEventKey { Pressed: true, Echo: false } key)
         {
             if (key.PhysicalKeycode is Key.E or Key.Escape) { Close(); GetViewport().SetInputAsHandled(); }
             else if (key.PhysicalKeycode == Key.A) { TakeAll(); GetViewport().SetInputAsHandled(); }
             else if (key.PhysicalKeycode is Key.Pageup or Key.Pagedown)
-            { _offsets[_side] += key.PhysicalKeycode == Key.Pageup ? -RowsPerPage : RowsPerPage; Refresh(); GetViewport().SetInputAsHandled(); }
+            { NavigateRows(key.PhysicalKeycode == Key.Pageup ? -RowsPerPage : RowsPerPage); GetViewport().SetInputAsHandled(); }
         }
         if (inputEvent is InputEventMouseButton { Pressed: true } mouse && mouse.ButtonIndex is MouseButton.WheelUp or MouseButton.WheelDown)
-        { _offsets[_side] += mouse.ButtonIndex == MouseButton.WheelUp ? -1 : 1; Refresh(); GetViewport().SetInputAsHandled(); }
+        { NavigateRows(mouse.ButtonIndex == MouseButton.WheelUp ? -1 : 1); GetViewport().SetInputAsHandled(); }
     }
     public override void _Draw()
     {
         if (Error is not null) return;
-        try { _tiles.Draw(this); }
+        try
+        {
+            _tiles.Draw(this);
+            var focused = _targets.Concat(_rows).FirstOrDefault(target => target.Button.HasFocus()).Button;
+            if (focused is not null) DrawRect(new Rect2(focused.Position, focused.Size).Grow(2), _tiles.Color, false, 2);
+        }
         catch (Exception error) { Error = error.Message; GD.PushError($"OPENNV_CONTAINER_UI_FAIL {error.Message}"); }
     }
 }

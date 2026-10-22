@@ -13,6 +13,8 @@ internal sealed partial class NativeOwnedQuantityMenu : Control
     private readonly Action<int?> _complete;
     private readonly int _maximum;
     private bool _closed;
+    private NativeMenuStick _stick;
+    private Label _controllerHints = null!;
     private NativeViewportLayout? _viewportLayout;
     internal int Quantity { get; private set; }
     internal string? Error { get; private set; }
@@ -62,7 +64,21 @@ internal sealed partial class NativeOwnedQuantityMenu : Control
     }
 
     private void Complete(int? quantity) { if (_closed || quantity is not null && Error is not null) return; _closed = true; _complete(quantity); }
-    public override void _Ready() { Select(Quantity); Layout(); }
+    public override void _Ready()
+    {
+        _controllerHints = new Label
+        {
+            Text = "Gamepad: Left/Right amount  |  LB/RB +/-10  |  A confirm  |  B cancel",
+            HorizontalAlignment = HorizontalAlignment.Center,
+            MouseFilter = MouseFilterEnum.Ignore,
+            Visible = OS.HasFeature("android") || Input.GetConnectedJoypads().Count != 0
+        };
+        _controllerHints.AddThemeFontSizeOverride("font_size", 24);
+        _controllerHints.AddThemeColorOverride("font_color", _tiles.Color);
+        AddChild(_controllerHints);
+        Select(Quantity); Layout();
+        _targets.First(target => target.Control.Name == "QM_OKButton").Control.GrabFocus();
+    }
     public override void _EnterTree() => _viewportLayout = new(this, Layout);
     public override void _ExitTree() => _viewportLayout?.Dispose();
 
@@ -74,6 +90,8 @@ internal sealed partial class NativeOwnedQuantityMenu : Control
             var scale = GetViewportRect().Size.Y / 960;
             Scale = Vector2.One * scale; Position = Vector2.Zero;
             Size = _tiles.Screen = GetViewportRect().Size / scale; _tiles.ResolutionConverter = 1 / scale;
+            if (_controllerHints is not null)
+            { _controllerHints.Position = new(20, 900); _controllerHints.Size = new(Math.Max(0, Size.X - 40), 40); }
             foreach (var (tile, control) in _targets)
             {
                 control.Position = _tiles.Position(tile);
@@ -88,7 +106,25 @@ internal sealed partial class NativeOwnedQuantityMenu : Control
     {
         if (_closed) return;
         var viewport = GetViewport();
-        if (inputEvent is InputEventKey { Pressed: true } key)
+        if (inputEvent is InputEventJoypadButton { Pressed: true } button)
+        {
+            switch (button.ButtonIndex)
+            {
+                case JoyButton.A: Complete(Quantity); break;
+                case JoyButton.B: Complete(null); break;
+                case JoyButton.DpadLeft: Select(Quantity - 1); break;
+                case JoyButton.DpadRight: Select(Quantity + 1); break;
+                case JoyButton.LeftShoulder: Select(Quantity - 10); break;
+                case JoyButton.RightShoulder: Select(Quantity + 10); break;
+                default: return;
+            }
+            viewport.SetInputAsHandled();
+        }
+        else if (inputEvent is InputEventJoypadMotion { Axis: JoyAxis.LeftX })
+        {
+            Select(Quantity + _stick.Read(inputEvent).X); viewport.SetInputAsHandled();
+        }
+        else if (inputEvent is InputEventKey { Pressed: true } key)
         {
             switch (key.PhysicalKeycode)
             {

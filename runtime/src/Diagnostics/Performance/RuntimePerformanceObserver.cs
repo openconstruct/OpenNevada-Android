@@ -18,7 +18,7 @@ internal partial class RuntimePerformanceObserver : Node
         LogSnapshot(prototypes);
     }
 
-    private static void LogSnapshot(int? prototypes = null)
+    private static void LogSnapshot(int? prototypes = null, object? renderCost = null)
     {
         var optimized = !(typeof(RuntimePerformanceObserver).Assembly
             .GetCustomAttributes(typeof(System.Diagnostics.DebuggableAttribute), false)
@@ -52,6 +52,8 @@ internal partial class RuntimePerformanceObserver : Node
             residentKiB,
             swapKiB,
             prototypes,
+            sunShadowCascades = Presentation.Rendering.RuntimeSunShadows.Cascades,
+            renderCost,
             sourcePayloadCache = Content.RuntimeLiveContentSource.Current?.CacheState,
             textureSharing = Presentation.Rendering.NativeDdsTexture.SharingState,
             shaderSharing = Presentation.Rendering.NativeShaderResources.State
@@ -110,7 +112,7 @@ internal partial class RuntimePerformanceObserver : Node
         if (LogEnabled && Time.GetTicksMsec() - _lastLogMilliseconds >= 5000)
         {
             _lastLogMilliseconds = Time.GetTicksMsec();
-            LogSnapshot();
+            LogSnapshot(renderCost: SampleRenderCost());
         }
         _elapsedSeconds += delta;
         if (_elapsedSeconds < _configuration.SampleIntervalSeconds)
@@ -122,6 +124,14 @@ internal partial class RuntimePerformanceObserver : Node
 
     public override void _ExitTree()
     {
+        if (LogEnabled)
+        {
+            GetTree().NodeAdded -= TrackViewport;
+            GetTree().NodeRemoved -= UntrackViewport;
+            foreach (var viewport in _viewports)
+                RenderingServer.ViewportSetMeasureRenderTime(viewport.GetViewportRid(), false);
+            _viewports.Clear();
+        }
         if (_reportPath is null || _reportWritten)
             return;
         if (_sampleCount == 0)

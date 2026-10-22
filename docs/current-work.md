@@ -15,11 +15,11 @@ CPU/headless checks and handheld rendering; do not reset the desktop display/GPU
 
 ## Candidate and settings
 
-APK 0.1.14/code 15 is installed, SHA-256
-`e02e1371854b00fdc4f840ac9b9bb615367fccace6219810e5901fdc99c4cbba`.
-Runtime changes are in PR #15, based on merged PR #14/main 61f59f8. No GitHub
-checks were scheduled; the required local runtime gate, selected owned checks
-and bounded physical chain below passed.
+APK 0.1.15/code 16 is installed, SHA-256
+`2a832ef237c3b749ed8f83577abf011f9dc589562da535b85d39f4a8da7e267e`.
+It adds render timings and reversible quality probes to merged PR #15/main
+dffaa93. The required local runtime gate and selected owned sun/weather check
+pass. This diagnostic build does not establish an FPS improvement.
 
 Android 14/API 34, SM6115/Adreno 610, about 3.57 GiB physical memory and 2.5 GiB
 LZ4 zram. Current driver: Qualcomm Vulkan 1.1.295. Older runs used Turnip 1.0.328;
@@ -98,6 +98,44 @@ save, manual slot and private backup match by SHA-256. The original interior,
 code-12/code-13 exterior and code-15 door/manual checkpoints are also preserved.
 Do not edit save fields or inject player/world state to manufacture success.
 
+## Outdoor frame-cost experiment
+
+Code 16 PID 16096 restored the same authentic exterior save, ordinary Continue
+at 18:31:43, source world ready 18:32:59, visible draw telemetry by 18:34:02.
+GPU time below is the main viewport; its first-person viewport adds about 2 ms.
+CPU render submission/setup was generally about 10–17 ms with shadows and
+about 9–11 ms without. Gameplay/process counters include other work and stalls;
+do not add them to GPU time as disjoint frame slices.
+
+Same camera, advancing live world, sequential bounded probes:
+
+| World resolution | Sun shadow cascades | Active FPS | Main viewport GPU |
+| --- | --- | --- | --- |
+| 960x540 | 4, warm restored baseline | 9–10 | about 84 ms |
+| 960x540 | 2 | 7–10 | about 79 ms |
+| 960x540 | 1 | 8–9 | about 77–80 ms, occasional 91 ms |
+| 960x540 | off | 7–10 | about 61–64 ms, occasional 73 ms |
+| 640x360 | off | 7–10 | about 43–44 ms |
+
+At 640x360/shadows off, pause reached about 21–22 FPS while GPU time stayed
+about 43 ms; active play remained about 9–10. Both rendering and game updates
+need work. These short, sequential observations are not a controlled identical
+world-state replay or a sustained performance claim. There is no evidence that
+the visual cuts alone deliver a worthwhile active-FPS gain. Restored 960x540 and
+four cascades, then paused outdoors. UI remained 1280x720; save hash unchanged.
+
+Only with the diagnostic FPS overlay, F6 cycles sun shadows 4/2/1/off and F7
+cycles world scale .75/.5/1. XR ignores these diagnostic keys. The optional
+`--sun-shadows 0|1|2|4` flag selects launch quality; absent it, four is unchanged.
+`--performance-log` alone enables per-viewport timestamp measurements and logs
+them asynchronously every five seconds, including while paused. No live harness,
+frame recording, desktop GPU test, driver change or global OS tweak was needed.
+
+A private 15-second simpleperf sample captured 2,069 CPU-cycle samples with none
+lost. About 44% was unresolved, 25% through Godot, 8% Mono, 8% kernel and 5%
+Vulkan; that does not identify a particular managed update owner. No tracing
+services or security settings were changed. Collector/profile processes ended.
+
 ## Verification and next owners
 
 Code 15 passes the full required Release/Debug, formatting/analyzer, contract,
@@ -105,8 +143,10 @@ launcher and native headless Godot gate, plus selected owned DDS, Shader,
 cell-handoff and NPC assembly audits (all 13 Doc parts retained). Android export
 and v2/v3 signatures pass. No desktop GPU test or frame recording was run.
 
-1. Profile outdoor frame time and draw submission toward 30 FPS; memory fitting
-   alone does not solve 7–10 FPS. Keep texture quality and owned admission intact.
+1. Attribute active CPU update cost to individual owners, then remove repeated
+   unchanged work. Profile mesh/material batching and shader/terrain cost for the
+   independent GPU limit. Further resolution/shadow cuts alone did not solve FPS.
+   Keep texture quality and owned admission intact; 30 FPS remains unachieved.
 2. Exercise repeated doors, neighboring-cell commits and longer travel to bound
    warm-resource growth. One successful exit does not establish overall stability.
 3. Preserve visible source gaps: 342 missing/unbound exterior references in the

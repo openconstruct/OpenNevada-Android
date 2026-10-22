@@ -257,6 +257,15 @@ freeze on the engine thread; one background writer replaces the complete file
 atomically, preserving open readers. Backpressure and write failures remain
 visible. Lightweight coverage queries do not replace canonical capture.
 
+The lightweight performance log also measures tracked viewports without enabling
+the live harness. Measurements are queried asynchronously on the render thread;
+their sample timestamp remains explicit. Tracking unsubscribes and disables
+measurements at teardown. Diagnostic F6/F7 probes with the FPS overlay vary sun
+shadow cascades and flat world resolution without changing authoritative state,
+source admission or canvas size. Sun quality subscribers follow the exterior
+environment lifetime and apply even while gameplay is paused. Defaults remain
+four cascades and the selected launch render scale.
+
 The winning cell-child index is built once for each requested record signature.
 Subsequent cell queries visit only that cell's indexed children. The lab's
 all-cell sweep exercises the same index and lifetime owner as ordinary loading.

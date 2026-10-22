@@ -68,6 +68,8 @@ internal partial class RuntimeNativeExteriorEnvironment : Node
             DirectionalShadowMode = DirectionalLight3D.ShadowMode.Parallel4Splits
         };
         AddChild(_sun);
+        RuntimeSunShadows.Changed += ApplyShadowQuality;
+        ApplyShadowQuality();
         Register(_scene);
         SetMeta("opennv_exterior_presentation_unverified", "clouds,celestial-projection,weather-transition,region-edge-blend,LOD,matched-pixels");
         Sample();
@@ -75,9 +77,12 @@ internal partial class RuntimeNativeExteriorEnvironment : Node
 
     public override void _ExitTree()
     {
+        RuntimeSunShadows.Changed -= ApplyShadowQuality;
         if (_tree is not null) { _tree.NodeAdded -= BindAdded; _tree.NodeRemoved -= RemoveSurface; }
         _tree = null; _meshes.Clear();
     }
+
+    private void ApplyShadowQuality() => RuntimeSunShadows.Apply(_sun);
 
     public override void _Process(double delta)
     {

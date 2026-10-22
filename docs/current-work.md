@@ -63,6 +63,16 @@ Qualcomm Adreno 610/Vulkan 1.1.295 rather than the earlier Turnip/Vulkan 1.0.328
 no driver setting was changed by this work. Performance comparisons across
 those runs are confounded by that driver difference.
 
+Physical code-11 Continue restored the save in about 56 seconds; first compositor
+output arrived about 102 seconds after Continue. The stationary interior view
+reported roughly 27–30 FPS, without a sustained-30 gameplay claim. A temporary
+frame confirmed the room and top-right counter; it was deleted. Ordinary movement
+and activation then opened the exit. During exterior preparation the source
+cache stayed below 128 MiB and evicted 397 entries/about 53 MiB by prototype 350.
+Android still killed PID 27243 for LOW_MEMORY at about 2.2 GB reported PSS before
+model-ready/commit. The smaller cap works but does not fix exterior loading. The
+save is preserved; duplicate texture uploads and transition overlap remain next.
+
 The top-right FPS overlay remains enabled, with 960x540 3D and native 1280x720
 UI/output. Keep the same APK/save when comparing driver settings. The latest
 physical gameplay measurement remains 20–22 FPS on code 9, not a 30 FPS result.

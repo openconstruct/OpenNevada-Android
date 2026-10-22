@@ -25,8 +25,11 @@ acceptance remains open.
   checks. The Windows diagnostic helper is cross-compiled on this host.
 - Desktop syntax checks pass. The retained JavaScript suite reports 11 passes,
   two skips, and zero failures. These checks are not gameplay proof.
-- Android archive input bindings omit right-stick look. Review physical input as
-  an independent capability, retaining modal and source-control gates.
+- The original Android archive omits right-stick look. The current controller
+  adapter binds menu navigation/accept/cancel and the shared move, look,
+  interaction, jump, reload, Pip-Boy, pause, save and trigger actions. Desktop
+  bindings remain intact. Right-stick look integrates elapsed time and respects
+  modal, source-control, focus, capture, XR and furniture gates.
 - Owned installation checks pass base-game plugin/archive admission and the
   opening quests' compiled global-write bindings. One base master and seven
   archives are admitted. This does not establish ordinary opening gameplay.
@@ -65,14 +68,23 @@ selection and overlapping input need acceptance checks.
 
 ## Next owners
 
-1. Resolve the missing owned HUD settings and establish visible start-menu UI.
-2. Trace the six remaining missing references and other loading divergences.
+1. Validate APK 0.1.2 physical menu and gameplay controls on the Air X. Native
+   input checks exercise launcher Play, menu focus/navigation, accept/cancel,
+   confirmation, duplicate configuration and frame-rate-independent look.
+   Touch New Game already opens confirmation in the prior device build.
+   The full runtime gate and owned menu-input audit pass with clean logs. The
+   APK exports cleanly, installs as version code 3, cold-starts and retains the
+   registered installation. The owner confirms visible D-pad focus. Device
+   input reaches New Game confirmation and accepts it; loading then fails on
+   the missing desktop `RendererInfo.txt`. Gameplay controls remain unverified.
+2. Resolve the missing owned HUD settings. The start-menu UI becomes visible
+   after loading; that HUD error does not itself prevent start-menu selection.
+3. Trace the six remaining missing references and other loading divergences.
    Integrate platform services separately from the Android archive's older
    desktop differences.
-3. Integrate physical input with frame-rate-independent right-stick look,
-   correct modal behavior, and safe disconnect/focus transitions.
-4. Retain the passing owned-installation audits and extend them for each fix.
-5. Test the acceptance sequence on the Air X, then select the next measured
+4. Exercise modal behavior, safe disconnect/focus transitions, combat and saves.
+5. Retain the passing owned-installation audits and extend them for each fix.
+6. Test the acceptance sequence on the Air X, then select the next measured
    loading, memory, rendering, or gameplay failure.
 
 ## Publication boundary

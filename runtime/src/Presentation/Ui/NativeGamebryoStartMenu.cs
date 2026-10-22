@@ -92,15 +92,18 @@ internal sealed partial class NativeGamebryoStartMenu : Control
 
     private void Activate(string action)
     {
+        GD.Print($"OPENNV_START_MENU_ACTION action={action}");
         if (_confirmation is not null) return;
         if (action == "sNew")
         {
             _confirmation = new NativeStartMenuConfirmation(_settings, _menu, _records!, _color, "sConfirmNew", accepted =>
             {
+                GD.Print($"OPENNV_START_MENU_CONFIRM action={action} accepted={accepted}");
                 var previous = _confirmation;
                 _confirmation = null;
                 previous?.QueueFree();
                 RefreshEnabled();
+                _buttons.First(button => !button.Disabled).GrabFocus();
                 if (accepted) _activate(action);
             });
             _canvas.AddChild(_confirmation);
@@ -109,7 +112,11 @@ internal sealed partial class NativeGamebryoStartMenu : Control
         }
         else if (action == "sCrew")
         {
-            var credits = new NativeGamebryoCredits(_settings, () => _canvas.Visible = true);
+            var credits = new NativeGamebryoCredits(_settings, () =>
+            {
+                _canvas.Visible = true;
+                _buttons[_actions.ToList().IndexOf("sCrew")].GrabFocus();
+            });
             _canvas.Visible = false;
             AddChild(credits);
         }
@@ -142,6 +149,7 @@ internal sealed partial class NativeGamebryoStartMenu : Control
         RefreshEnabled();
         _canvas.Visible = true;
         Layout();
+        _buttons.First(button => !button.Disabled).GrabFocus();
     }
 
     internal void ShowLoading(bool savedGame)
@@ -315,9 +323,11 @@ internal sealed partial class NativeStartMenuConfirmation : Control
         _complete(accepted);
     }
 
-    public override void _UnhandledKeyInput(InputEvent @event)
+    public override void _Ready() => _choices[1].GrabFocus();
+
+    public override void _UnhandledInput(InputEvent @event)
     {
-        if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape })
+        if (@event.IsActionPressed("ui_cancel"))
         {
             GetViewport().SetInputAsHandled();
             Submit(false);
@@ -343,6 +353,7 @@ internal sealed partial class NativeBitmapMenuButton : BaseButton
     internal NativeBitmapMenuButton(FalloutBitmapFont font, Texture2D atlas, Color color)
     {
         _font = font; _atlas = atlas; _color = color;
+        FocusMode = FocusModeEnum.All;
         MouseEntered += QueueRedraw;
         MouseExited += QueueRedraw;
         FocusEntered += QueueRedraw;
@@ -353,6 +364,8 @@ internal sealed partial class NativeBitmapMenuButton : BaseButton
     public override void _Draw()
     {
         if (!DrawText) return;
+        if (HasFocus() && !Disabled)
+            DrawRect(new Rect2(Vector2.Zero, Size).Grow(3), _color, false, 1.5f);
         var cursor = 0.0f;
         var tint = Disabled ? new Color(_color.R, _color.G, _color.B, 127.0f / 255) : _color;
         foreach (var character in Text)

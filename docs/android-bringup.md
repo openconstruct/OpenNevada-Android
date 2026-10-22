@@ -80,6 +80,37 @@ Review startup, access to the selected installation, input, serialization, movie
 playback, and rendering individually. That archive also contains earlier desktop
 code; importing it wholesale would remove newer gameplay and persistence fixes.
 
+## Controller input
+
+Experimental APK 0.1.2 (code 3) adds explicit menu accept/cancel/navigation and
+shared gameplay action bindings. Existing keyboard and mouse events are retained;
+reconfiguring the controller map does not append duplicate events. A registered
+installation initially focuses Play. The start menu focuses the first enabled
+entry, shows a focus outline, and defaults New Game confirmation to No. B cancels
+the confirmation and returns focus to the main menu. Touch selection remains
+available.
+
+| Control | Binding |
+| --- | --- |
+| Menu D-pad / left stick | Navigate |
+| Menu A / B | Accept / cancel |
+| Gameplay left / right stick | Move / look |
+| A / Y / X / B | Interact / jump / reload or ready weapon / Pip-Boy |
+| RT / LT | Fire / aim |
+| Start / Back | Pause / quick save |
+| Left stick press | Sprint |
+
+Right-stick look uses elapsed physics time and a radial deadzone. It shares
+mouse-look limits and source-control/furniture handling and is suppressed during
+modal UI, XR, uncaptured input or lost window focus. A disconnected-controller
+look sample is zero. This implements presentation input, not new gameplay state.
+Physical controls, focus/disconnect transitions, combat and saves still require
+ordinary device acceptance; menu input checks do not establish those outcomes.
+
+The native `--menu-input <owned-install>` audit exercises Play, D-pad selection,
+A acceptance, B cancellation, confirmation, retained desktop bindings, duplicate
+configuration and look integration at two frame rates without starting a campaign.
+
 ## First device acceptance
 
 Use ordinary physical controls and the user's own installation:

@@ -257,11 +257,16 @@ internal partial class RuntimeNativePlayer : CharacterBody3D
             inputEvent is not InputEventMouseMotion motion)
             return;
         if (_furniturePhase is 1 or 2 or 4) return;
-        if (_furniturePhase == 3) _furnitureLookYaw -= motion.Relative.X * _configuration.Player.MouseSensitivityRadiansPerPixel;
-        else RotateY(-motion.Relative.X * _configuration.Player.MouseSensitivityRadiansPerPixel);
+        ApplyLook(motion.Relative * _configuration.Player.MouseSensitivityRadiansPerPixel);
+    }
+
+    private void ApplyLook(Vector2 radians)
+    {
+        if (radians == Vector2.Zero) return;
+        if (_furniturePhase == 3) _furnitureLookYaw -= radians.X;
+        else RotateY(-radians.X);
         _pitchRadians = Math.Clamp(
-            _pitchRadians - motion.Relative.Y *
-                _configuration.Player.MouseSensitivityRadiansPerPixel,
+            _pitchRadians - radians.Y,
             -_configuration.Player.VerticalLookLimitRadians,
             _configuration.Player.VerticalLookLimitRadians);
         if (_furniturePhase == 3) PublishFurnitureCamera();
@@ -275,6 +280,9 @@ internal partial class RuntimeNativePlayer : CharacterBody3D
 
     public override void _PhysicsProcess(double delta)
     {
+        if (_xr is null && !_modalInput && _lookingEnabled && _furniturePhase is not (1 or 2 or 4) &&
+            Input.MouseMode == Input.MouseModeEnum.Captured && GetWindow().HasFocus())
+            ApplyLook(InputSystem.GamepadInputMap.ReadLook(delta, true));
         PublishXrPointer();
         if (_xr is not null && GetTree().Paused) return;
         AdvanceExplosionExposure(delta);

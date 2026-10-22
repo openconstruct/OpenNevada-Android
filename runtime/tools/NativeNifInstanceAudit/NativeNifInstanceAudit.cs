@@ -12,6 +12,24 @@ public partial class NativeNifInstanceAudit : Node
     {
         try
         {
+            if (OS.GetCmdlineUserArgs() is ["--hud-placement", var hudRoot, var hudFrame, "--compact-quest-notices"])
+            {
+                await ExerciseHudPlacement(hudRoot, hudFrame);
+                GetTree().Quit();
+                return;
+            }
+            if (OS.GetCmdlineUserArgs() is ["--post-effects", var postRoot])
+            {
+                await ExercisePostEffects(postRoot);
+                GetTree().Quit();
+                return;
+            }
+            if (OS.GetCmdlineUserArgs() is ["--creation-choices", var choicesRoot])
+            {
+                await ExerciseCreationChoices(choicesRoot);
+                GetTree().Quit();
+                return;
+            }
             if (OS.GetCmdlineUserArgs() is ["--special-controls", var specialRoot, var specialFrame])
             {
                 await ExerciseSpecialControls(specialRoot, specialFrame);

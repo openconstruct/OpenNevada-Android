@@ -1,18 +1,15 @@
 using Godot;
 using OpenNV.Runtime.Content;
+using OpenNV.Runtime.Presentation.Ui;
 
 namespace OpenNV.Runtime.Campaigns.NewVegas.Opening;
 
 internal partial class RuntimeNativeTagSkillEntry : CanvasLayer
 {
     private const int LayerIndex = 120;
-    private const float PanelWidthPixels = 560.0f;
-    private const float ShadeOpacity = 0.82f;
     private FalloutNativeTagSkillContract _contract = null!;
     private readonly List<FalloutNativeSkillIdentity> _selected = [];
-    private readonly List<Button> _buttons = [];
-    private Label _status = null!;
-    private Button _confirm = null!;
+    private NativeMultiSelectMenu _menu = null!;
 
     internal event Action<IReadOnlyList<FalloutNativeSkillIdentity>>? Accepted;
 
@@ -26,43 +23,11 @@ internal partial class RuntimeNativeTagSkillEntry : CanvasLayer
         _selected.AddRange(current);
         Name = "NativeTagSkillEntry";
         Layer = LayerIndex;
-        var shade = new ColorRect
-        {
-            Color = new Color(0.0f, 0.0f, 0.0f, ShadeOpacity),
-            LayoutMode = 1,
-            AnchorsPreset = (int)Control.LayoutPreset.FullRect,
-        };
-        AddChild(shade);
-        var center = new CenterContainer
-        {
-            LayoutMode = 1,
-            AnchorsPreset = (int)Control.LayoutPreset.FullRect,
-        };
-        AddChild(center);
-        var column = new VBoxContainer { CustomMinimumSize = new Vector2(PanelWidthPixels, 0.0f) };
-        center.AddChild(column);
-        column.AddChild(new Label
-        {
-            Text = "CHOOSE THREE TAG SKILLS",
-            HorizontalAlignment = HorizontalAlignment.Center,
-        });
-        foreach (var skill in contract.Skills)
-        {
-            var button = new Button { Text = skill.DisplayName, ToggleMode = true };
-            button.Pressed += () => Toggle(skill);
-            _buttons.Add(button);
-            column.AddChild(button);
-        }
-        _status = new Label { HorizontalAlignment = HorizontalAlignment.Center };
-        column.AddChild(_status);
-        _confirm = new Button { Text = "CONFIRM TAG SKILLS" };
-        _confirm.Pressed += Submit;
-        column.AddChild(_confirm);
-        column.AddChild(new Label
-        {
-            Text = "Winning AVIF identities • functional OpenNV presentation",
-            HorizontalAlignment = HorizontalAlignment.Center,
-        });
+        _menu = new NativeMultiSelectMenu("CHOOSE THREE TAG SKILLS",
+            contract.Skills.Select(skill => skill.DisplayName).ToArray(), "CONFIRM TAG SKILLS");
+        _menu.ChoicePressed += index => Toggle(_contract.Skills[index]);
+        _menu.Confirmed += Submit;
+        AddChild(_menu);
         Input.MouseMode = Input.MouseModeEnum.Visible;
         Refresh();
     }
@@ -78,12 +43,8 @@ internal partial class RuntimeNativeTagSkillEntry : CanvasLayer
 
     private void Refresh()
     {
-        for (var index = 0; index < _contract.Skills.Count; ++index)
-            _buttons[index].ButtonPressed = _selected.Contains(_contract.Skills[index]);
-        _status.Text = $"Selected: {_selected.Count} / {_contract.RequiredCount}";
-        _confirm.Disabled = _selected.Count != _contract.RequiredCount;
-        if (!_confirm.Disabled)
-            _confirm.GrabFocus();
+        _menu.Refresh(_contract.Skills.Select(skill => _selected.Contains(skill)).ToArray(),
+            $"Selected: {_selected.Count} / {_contract.RequiredCount}", _selected.Count == _contract.RequiredCount);
     }
 
     private void Submit()

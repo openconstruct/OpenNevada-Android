@@ -48,11 +48,11 @@ internal sealed class FalloutInstallationSettings
             ? number : throw new NotSupportedException($"Owned integer setting has no admitted default: [{section}] {key}.");
     }
 
-    // Native UI policy: an unset custom HUD color uses the installation's
+    // Native UI policy: an unset custom interface color uses the installation's
     // named system channels. Matched retail color-selection proof is open.
-    internal uint InterfaceColor(string systemColor)
+    internal uint InterfaceColor(string systemColor, string customSetting = "uHUDColor")
     {
-        var custom = Unsigned("Interface", "uHUDColor");
+        var custom = Unsigned("Interface", customSetting);
         if (custom != 0) return custom;
         uint Channel(string channel)
         {

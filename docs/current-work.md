@@ -3,7 +3,7 @@
 ## Objective and boundaries
 
 Make ordinary Fallout: New Vegas gameplay work on the owner's Mangmi Air X,
-including loot/controller interactions, while keeping the runtime within memory.
+including Pip-Boy and loot/controller interactions, while keeping the runtime within memory.
 Shared first-party C#/Godot gameplay and saves remain authoritative. No subagents.
 Cutscenes remain deferred. No campaign, world, controller or retail parity claim.
 
@@ -14,11 +14,14 @@ do not reset the desktop display/GPU or change drivers for comparison.
 
 ## Candidate
 
-APK 0.1.17/code 18 is installed, SHA-256
-`a6d90e3f1fd270b89c9270afbb62b7ecdd052204659da46b5b489b5e56fc8194`.
-The required full local runtime gate, selected owned interaction/controller audit,
-Android export and v2/v3 signatures pass. The owner confirmed physical D-pad
-selection, A transfer and B close on the handheld.
+APK 0.1.18/code 19 is installed for acceptance, SHA-256
+`361fad88b25769fffdc08bbb755b6b85f8c12ad88d79508dfe220c9c7a610e7f`.
+Owned Pip-Boy/source-color/controller audits, Android export and v2/v3 signatures
+pass. The final required full runtime gate and handheld display check pass.
+The owner confirmed physical Pip-Boy page/tab/row navigation, A activation
+and B close back to gameplay on code 19.
+The previous code-18 container build passed its required gate; the owner confirmed
+physical D-pad selection, A transfer and B close on that build.
 
 Android 14/API 34, SM6115/Adreno 610, about 3.57 GiB physical RAM and 2.5 GiB LZ4
 zram. Qualcomm Vulkan 1.1.295 is current; earlier runs used Turnip 1.0.328. No
@@ -29,6 +32,42 @@ Bloom/blur/double/adaptive exposure off; output conversion/tint/fades remain.
 Outdoor draw cap is the owner's selected 200 metres, with matching fog ending
 by 190 metres. Gameplay residency/collisions remain intact. Raw-source LRU is
 128 MiB on Android / 512 MiB desktop and counts retained payloads only.
+
+## Pip-Boy display and input fault
+
+The owner reported a Pip-Boy freeze after container acceptance. PID 20900 remained
+alive, rendering about 10–13 FPS with a blank CRT and no Pip-Boy exception.
+Escape closed it, restored gameplay and saved the current interior at 19:49:40.
+Pre-change backup: work/opennv-pre-pipboy-fix-save.private.json, SHA-256
+6b01b969ebd1b37bc5409be98c0f677a366e4d16d03a511221b083d269766f7b.
+
+A private code-19 diagnostic readback separated the source canvas from the arm:
+only the new focus outline was visible; the menu art/text were black. The mesh
+was visible, had its intended material and was picked correctly. The installation's
+uPipboyColor is zero (unset); its named Pipboy RGB channels resolve to 1aff80ff.
+The tile owner used the raw zero custom color instead of those channels. General
+interface selection now accepts the independent custom setting, preserving a
+nonzero override and resolving the named source channels when unset. Diagnostic
+captures were inspected/deleted on host and device; the one-shot capture code
+and launch flag were removed from the candidate.
+
+The input adapter also omitted joypad forwarding into its source viewport.
+Candidate controls: LB/RB STAT/ITEMS/DATA, left/right tabs, up/down rows, A use,
+B close. Source tile targets have initial focus and visible highlight; refresh
+retains it, paging reaches additional rows and stick hysteresis rejects repeats.
+DATA initially selects quests, which remains usable in interiors; world-map exit
+routing inside an interior and other unsupported pages still fail visibly.
+XR pointer behavior and authoritative inventory/quest owners remain shared.
+Owned paused-subviewport input and color audits and final Android export pass;
+the final required full runtime gate passes. The owner confirmed every requested
+physical Pip-Boy control, including B returning to gameplay.
+Code-19 PID 22188 loaded the current interior checkpoint, then ordinary Tab opened
+Pip-Boy at 19:58:10. A handheld frame confirmed visible source text/art, focus
+outline and readable controller hints at 1280x720. It was inspected/deleted.
+Menu rendering is still about 11 FPS; the display fix is not a performance result.
+The owner answered "All work" for LB/RB pages, left/right tabs, up/down selection,
+A activation and B close back to gameplay. Leave the current session running.
+The private diagnostic APK is not the deliverable.
 
 ## Reported first-aid-box failure
 
@@ -64,10 +103,14 @@ world/player state to manufacture success. Code-18 PID 20900 Continue began at
 items, initial Stimpak focus, visible outline and readable controller hints.
 A temporary frame was inspected/deleted. The owner then confirmed real D-pad
 selection, A transfer and B close. Native saves completed at 19:44:58, 19:45:07
-and 19:45:11. The app remains running in the user's current interior session;
-do not restart or restore an older checkpoint without preserving new progress.
+and 19:45:11. This was the pre-Pip-Boy interior session; preserve its newer checkpoints
+in preference to older exterior saves.
 
-Post-acceptance backup: work/opennv-v18-controller-accepted-save.private.json,
+Before final code-19 installation, ordinary F5 saved at 19:55:26.
+Backup: work/opennv-pre-pipboy-release-save.private.json, SHA-256
+7e31e06e096fa9d211e178de9aed3e7d4b9543fdfe8a7481e8f9cb289425c61e.
+
+Post-container-acceptance backup: work/opennv-v18-controller-accepted-save.private.json,
 SHA-256 462b01023d0b6ecdb1370a31caa2ec184ebc8e4058cd320616e9f468df36231f.
 The code-18 log collector stopped after the bounded check. Hardware paging,
 quantity selection and Take All have software-audit coverage but not separate
@@ -108,9 +151,12 @@ profile collectors stopped; any current collector must be stopped after testing.
 
 ## Verification and next owners
 
-Latest gate: work/opennv-container-final-runtime-gate.log
-Selected audit: work/opennv-container-final-owned.log
-Export: work/opennv-container-export.log
+Latest gate: work/opennv-pipboy-final-runtime-gate.log (PASS)
+Selected audit: work/opennv-pipboy-final-owned.log
+Source-color audit: work/opennv-pipboy-settings-owned.log
+Handheld display log: work/opennv-device-v19.private.log
+Export: work/opennv-pipboy-export.log
+Prior container gate/audit: work/opennv-container-final-{runtime-gate,owned}.log
 Code-17 report: work/opennv-loot-freeze.private.log
 Code-18 physical test: work/opennv-device-v18.private.log
 

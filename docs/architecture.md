@@ -178,7 +178,11 @@ tombstone and commits deletion across residency teardown/reload. Neither a new
 model nor an enable request can resurrect that state. Pip-Boy selection and
 inventory invalidation have a shared owner. NativeOwnedPipBoy presents the source
 menu on the owned arm-mounted NIF, with one camera/screen input projection;
-equipment changes and quest/map state remain C# authority. Unspent character
+equipment changes and quest/map state remain C# authority. Its flat adapter
+forwards gamepad events into the source viewport while paused, owns B/toggle
+close, and exposes source page/tab/row selection with persistent focus. Source
+menu tiles resolve an unset custom Pip-Boy color through the installation's named
+Pipboy channels, independently of the custom HUD color. Unspent character
 creation state can be saved, while active interaction
 continuations still fail visibly instead of being discarded.
 

@@ -28,6 +28,8 @@ internal partial class RuntimeNativeImageSpace : Node
         Publish(0);
     }
 
+    public override void _ExitTree() => _effect?.ReleaseRenderingResources();
+
     // Menus pause simulation, but must still present the latest committed IMAD
     // state. Otherwise a fade applied on the menu-opening frame is never drawn.
     public override void _Process(double delta) => Publish(GetTree().Paused ? 0 : delta);

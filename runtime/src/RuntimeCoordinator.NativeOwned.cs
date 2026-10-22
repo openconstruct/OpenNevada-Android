@@ -1171,7 +1171,7 @@ public partial class RuntimeCoordinator
         root.SetMeta("opennv_image_space_tint", application.Tint);
         GD.Print($"OPENNV_NATIVE_IMAGE_SPACE source={imageSpace.Form} version={imageSpace.FormVersion} " +
             $"cinematic={application.Cinematic} tint={application.Tint} " +
-            "adaptation=runtime hdrParameterCoverage=partial depthOfField=unbound parity=unmeasured");
+            $"automaticExposure={application.Effect.AutomaticExposure} hdrParameterCoverage=partial depthOfField=unbound parity=unmeasured");
         return application.Compositor;
     }
 

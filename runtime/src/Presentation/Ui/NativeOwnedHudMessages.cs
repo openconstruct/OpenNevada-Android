@@ -16,10 +16,13 @@ internal sealed partial class NativeOwnedHudMessages : Control
     private readonly FalloutInstallationSettings _settings;
     private readonly NativeOwnedMenuTree _tiles;
     private readonly XElement _messages, _icon, _text, _bracket;
-    private readonly XElement _quest, _objective, _questTitle, _checkbox, _filledCheckbox;
+    private readonly XElement _quest, _questStages, _objective, _questTitle, _checkbox, _filledCheckbox;
     private readonly FalloutQuestState _quests;
     private readonly double _questFadeIn, _questHold, _questFadeOut;
     private readonly Dictionary<FalloutHudEvent, (string Text, string? Icon, double Seconds)> _resolved = [];
+    private readonly bool _compactQuestNotices = OS.GetCmdlineUserArgs().Contains("--compact-quest-notices", StringComparer.Ordinal);
+    internal Rect2 QuestNoticeBounds => new(_tiles.Position(_quest) * Scale,
+        new Vector2(_tiles.Number(_quest, "width"), _tiles.Number(_quest, "height")) * Scale);
     private long _displayed;
     private string? _displayIcon;
     internal string? Error { get; private set; }
@@ -69,14 +72,14 @@ internal sealed partial class NativeOwnedHudMessages : Control
         _text = Template("template_justify_left_text");
         _quest = new XElement(sourceMenu.Elements().Single(element => (string?)element.Attribute("name") == "QuestReminder"));
         menu.Add(_quest);
-        var stages = _quest.Elements().Single(element => (string?)element.Attribute("name") == "QuestStages");
+        _questStages = _quest.Elements().Single(element => (string?)element.Attribute("name") == "QuestStages");
         XElement QuestTemplate(string name)
         {
             var tile = new XElement(_quest.Elements("template").Single(element => (string?)element.Attribute("name") == name).Elements().Single());
-            stages.Add(tile); return tile;
+            _questStages.Add(tile); return tile;
         }
         _checkbox = QuestTemplate("template_checkbox"); _filledCheckbox = QuestTemplate("template_filled_checkbox");
-        _objective = new XElement(_text); stages.Add(_objective);
+        _objective = new XElement(_text); _questStages.Add(_objective);
         _questTitle = new XElement(_text); _quest.Add(_questTitle);
         foreach (var template in _quest.Elements("template").ToArray()) template.Remove();
         _tiles = new(menu);
@@ -124,10 +127,22 @@ internal sealed partial class NativeOwnedHudMessages : Control
             _settings.Number("Interface", wide ? "iSafeZoneXWide" : "iSafeZoneX"));
         _tiles.Bind(_messages, "y", _declaration.YInset + _declaration.SafeZoneScale *
             _settings.Number("Interface", wide ? "iSafeZoneYWide" : "iSafeZoneY"));
-        _tiles.Bind(_quest, "x", (Size.X - _tiles.Number(_quest, "width")) / 2);
-        _tiles.Bind(_quest, "y", (Size.Y - _tiles.Number(_quest, "height")) / 2);
+        // Explicit handheld presentation policy; retail native alignment is
+        // still unbound. Use the existing source-safe message inset.
+        _tiles.Bind(_quest, "x", _compactQuestNotices ? _tiles.Number(_messages, "x") : (Size.X - _tiles.Number(_quest, "width")) / 2);
+        _tiles.Bind(_quest, "y", _compactQuestNotices ? _tiles.Number(_messages, "y") : (Size.Y - _tiles.Number(_quest, "height")) / 2);
+        LayoutQuestText();
         QueueRedraw();
     }
+    private void LayoutQuestText()
+    {
+        // Runtime-inserted title/objective text needs measured flow when a
+        // wrapped quest title exceeds the original template's fixed row.
+        _tiles.Bind(_questStages, "y", _tiles.Number(_questTitle, "height") + _tiles.Font(_questTitle).Font.Height / 4f);
+    }
+    internal bool QuestTextOverlaps => new Rect2(_tiles.Position(_questTitle),
+        new(_tiles.Number(_questTitle, "width"), _tiles.Number(_questTitle, "height")))
+        .Intersects(new(_tiles.Position(_objective), new(_tiles.Number(_objective, "width"), _tiles.Number(_objective, "height"))));
     public override void _Process(double delta)
     {
         if (Error is not null) return;
@@ -160,6 +175,7 @@ internal sealed partial class NativeOwnedHudMessages : Control
                     _tiles.Text[_objective] = value.Text;
                     var record = _records.GetEffective(current.Event.Source);
                     _tiles.Text[_questTitle] = FalloutDialogueTopic.Text(record.ReadSubrecords().Single(field => field.Signature == "FULL").Data.Span);
+                    LayoutQuestText();
                     _tiles.Bind(_checkbox, "visible", current.Event.Kind == FalloutHudEventKind.ObjectiveDisplayed ? 1 : 0);
                     _tiles.Bind(_filledCheckbox, "visible", current.Event.Kind == FalloutHudEventKind.ObjectiveCompleted ? 1 : 0);
                 }

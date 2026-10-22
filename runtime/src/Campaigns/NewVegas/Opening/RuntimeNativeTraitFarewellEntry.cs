@@ -1,18 +1,15 @@
 using Godot;
 using OpenNV.Runtime.Content;
-using OpenNV.Runtime.World.Cells;
+using OpenNV.Runtime.Presentation.Ui;
 
 namespace OpenNV.Runtime.Campaigns.NewVegas.Opening;
 
 internal partial class RuntimeNativeTraitEntry : CanvasLayer
 {
     private const int LayerIndex = 120;
-    private const float PanelWidthPixels = 580.0f;
-    private const float ShadeOpacity = 0.82f;
     private FalloutNativeTraitFarewellContract _contract = null!;
     private readonly List<FalloutNativeTraitIdentity> _selected = [];
-    private readonly List<Button> _buttons = [];
-    private Label _status = null!;
+    private NativeMultiSelectMenu _menu = null!;
 
     internal event Action<IReadOnlyList<FalloutNativeTraitIdentity>>? Accepted;
 
@@ -25,37 +22,13 @@ internal partial class RuntimeNativeTraitEntry : CanvasLayer
         _selected.AddRange(current);
         Name = "NativeTraitEntry";
         Layer = LayerIndex;
-        var shade = FullShade();
-        AddChild(shade);
-        var center = FullCenter();
-        AddChild(center);
-        var column = new VBoxContainer { CustomMinimumSize = new Vector2(PanelWidthPixels, 0.0f) };
-        center.AddChild(column);
-        column.AddChild(new Label
-        {
-            Text = "CHOOSE UP TO TWO TRAITS",
-            HorizontalAlignment = HorizontalAlignment.Center,
-        });
-        foreach (var trait in contract.Traits)
-        {
-            var button = new Button { Text = trait.DisplayName, ToggleMode = true };
-            button.Pressed += () => Toggle(trait);
-            _buttons.Add(button);
-            column.AddChild(button);
-        }
-        _status = new Label { HorizontalAlignment = HorizontalAlignment.Center };
-        column.AddChild(_status);
-        var confirm = new Button { Text = "CONFIRM TRAITS" };
-        confirm.Pressed += Submit;
-        column.AddChild(confirm);
-        column.AddChild(new Label
-        {
-            Text = "Winning playable PERK identities • functional OpenNV presentation",
-            HorizontalAlignment = HorizontalAlignment.Center,
-        });
+        _menu = new NativeMultiSelectMenu("CHOOSE UP TO TWO TRAITS",
+            contract.Traits.Select(trait => trait.DisplayName).ToArray(), "CONFIRM TRAITS");
+        _menu.ChoicePressed += index => Toggle(_contract.Traits[index]);
+        _menu.Confirmed += Submit;
+        AddChild(_menu);
         Input.MouseMode = Input.MouseModeEnum.Visible;
         Refresh();
-        confirm.GrabFocus();
     }
 
     private void Toggle(FalloutNativeTraitIdentity trait)
@@ -69,9 +42,8 @@ internal partial class RuntimeNativeTraitEntry : CanvasLayer
 
     private void Refresh()
     {
-        for (var index = 0; index < _contract.Traits.Count; ++index)
-            _buttons[index].ButtonPressed = _selected.Contains(_contract.Traits[index]);
-        _status.Text = $"Selected: {_selected.Count} / {_contract.MaximumTraits} maximum";
+        _menu.Refresh(_contract.Traits.Select(trait => _selected.Contains(trait)).ToArray(),
+            $"Selected: {_selected.Count} / {_contract.MaximumTraits} maximum", true);
     }
 
     private void Submit()
@@ -81,16 +53,4 @@ internal partial class RuntimeNativeTraitEntry : CanvasLayer
         Accepted?.Invoke(selection);
     }
 
-    private static ColorRect FullShade() => new()
-    {
-        Color = new Color(0.0f, 0.0f, 0.0f, ShadeOpacity),
-        LayoutMode = 1,
-        AnchorsPreset = (int)Control.LayoutPreset.FullRect,
-    };
-
-    private static CenterContainer FullCenter() => new()
-    {
-        LayoutMode = 1,
-        AnchorsPreset = (int)Control.LayoutPreset.FullRect,
-    };
 }

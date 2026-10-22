@@ -68,36 +68,31 @@ selection and overlapping input need acceptance checks.
 
 ## Next owners
 
-1. Validate APK 0.1.3 direct startup and native rendering on the Air X. The
-   Android preset now skips the installation launcher using the remembered or
-   single registered profile, preserving the game's own New/Continue menu.
-   Missing files and ambiguous selections return to setup; B during startup
-   requests setup. Profile reload, ambiguity and missing-install checks pass.
-   Native rendering no longer requires a Windows hardware report: it logs its
-   first supported original shader package, validates program interfaces, and
-   retains strict existing report selection. This is native policy, not parity.
-   Device cold start logs registered-profile auto launch without a launcher click.
-   New Game reaches original shader package 002 and no longer fails on missing
-   `RendererInfo.txt`. It then exposes the desktop `ffprobe` movie dependency
-   and missing `[Interface] uHUDColor`; ordinary gameplay remains blocked.
-2. Retain the 0.1.2 physical menu and gameplay checks. Native
-   input checks exercise launcher Play, menu focus/navigation, accept/cancel,
-   confirmation, duplicate configuration and frame-rate-independent look.
-   Touch New Game already opens confirmation in the prior device build.
-   The full runtime gate and owned menu-input audit pass with clean logs. The
-   APK exports cleanly, installs as version code 3, cold-starts and retains the
-   registered installation. The owner confirms visible D-pad focus. Device
-   input reaches New Game confirmation and accepts it; loading then fails on
-   the missing desktop `RendererInfo.txt`. Gameplay controls remain unverified.
-3. Resolve the missing owned HUD settings. The start-menu UI becomes visible
-   after loading; that HUD error does not itself prevent start-menu selection.
-4. Trace the six remaining missing references and other loading divergences.
-   Integrate platform services separately from the Android archive's older
-   desktop differences.
-5. Exercise modal behavior, safe disconnect/focus transitions, combat and saves.
-6. Retain the passing owned-installation audits and extend them for each fix.
-7. Test the acceptance sequence on the Air X, then select the next measured
-   loading, memory, rendering, or gameplay failure.
+1. Prioritize gameplay and content on the owner's direction. Cutscenes are
+   deferred. Android experimental startup passes `--skip-cutscenes`; PlayBink
+   retains command validation, explicitly logs skipped playback, and releases
+   the movie blocker through the existing deferred continuation. This is an
+   intentional playback omission, not movie support or script parity.
+2. Verify APK 0.1.4 on the Air X. Cold startup already bypasses installation
+   setup using the registered profile and retains the game's New/Continue menu.
+   The prior device build reached original shader package 002, then failed on
+   desktop `ffprobe` and missing HUD preferences. Missing/ambiguous profiles
+   still return to setup, and B during startup requests setup.
+3. Validate owned interface defaults and native UI policy. Integer initializers
+   now admit unsigned INI identities with sections using the existing DWORD or
+   sign-extended immediate forms and writable receiver validation. Unsigned
+   settings prefer INI overrides, then the original executable association.
+   The selected executable declares an unset custom HUD color. Native UI uses
+   the installation's named HUD/main-menu channels when that value is zero.
+   Owned setting checks pass; matched retail color-selection proof remains open.
+4. Enter ordinary gameplay, exercise move/look/interaction and menus, save,
+   quit, then cold Continue. The owner confirms D-pad focus and New Game
+   confirmation in the prior build. Physical gameplay controls and persistence
+   acceptance remain open. Do not infer playability from menu or parser checks.
+5. Trace the six remaining missing references and other measured loading
+   divergences. Keep the shared source-driven C# owners; no campaign shortcuts.
+6. Profile loading, memory, frame time and transitions after the acceptance
+   sequence works. Keep cutscene decoding in the backlog.
 
 ## Publication boundary
 

@@ -120,6 +120,7 @@ internal sealed partial class NativeGodotLauncher : Control
         BuildBackground();
         BuildInterface();
         Refresh();
+        (_launch.Disabled ? _chooseInstall : _launch).GrabFocus();
     }
 
     public override void _UnhandledInput(InputEvent inputEvent)

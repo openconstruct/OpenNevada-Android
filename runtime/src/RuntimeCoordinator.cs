@@ -121,6 +121,7 @@ public partial class RuntimeCoordinator : Node3D
                     ? settingsPath
                     : null);
             DesktopInputMap.Configure(_configuration.Player.DesktopInput);
+            GamepadInputMap.Configure(_configuration.Player.DesktopInput);
             if (_options.TryGetValue("live-harness", out var harnessDirectory))
             {
                 var harness = new Diagnostics.Parity.RuntimeLiveHarness();

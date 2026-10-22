@@ -1,0 +1,94 @@
+using Godot;
+using OpenNV.Runtime;
+using OpenNV.Runtime.Content;
+using OpenNV.Runtime.InputSystem;
+using OpenNV.Runtime.Presentation.Ui;
+
+public partial class NativeNifInstanceAudit
+{
+    private async Task ExerciseMenuInput(string root)
+    {
+        var input = RuntimeConfiguration.Load().Player.DesktopInput;
+        DesktopInputMap.Configure(input);
+        GamepadInputMap.Configure(input);
+        using var accept = new InputEventJoypadButton { Device = 0, ButtonIndex = JoyButton.A, Pressed = true };
+        if (!InputMap.EventIsAction(accept, "ui_accept"))
+            throw new InvalidDataException("Controller A is not bound to ui_accept.");
+        var before = InputMap.ActionGetEvents(input.Activate.Action).Count;
+        GamepadInputMap.Configure(input);
+        if (InputMap.ActionGetEvents(input.Activate.Action).Count != before ||
+            !InputMap.ActionGetEvents(input.Activate.Action).Any(e => e is InputEventKey) ||
+            !InputMap.ActionGetEvents(input.Activate.Action).Any(e => e is InputEventJoypadButton))
+            throw new InvalidDataException("Controller configuration duplicates or replaces desktop bindings.");
+        var stick = new Vector2(.4f, -.6f);
+        var slow = Enumerable.Range(0, 30).Aggregate(Vector2.Zero, (sum, _) => sum + GamepadInputMap.LookDelta(stick, 1.0 / 30, true));
+        var fast = Enumerable.Range(0, 120).Aggregate(Vector2.Zero, (sum, _) => sum + GamepadInputMap.LookDelta(stick, 1.0 / 120, true));
+        if (slow.DistanceTo(fast) > .00001f || GamepadInputMap.LookDelta(stick, 1, false) != Vector2.Zero)
+            throw new InvalidDataException("Stick look depends on frame count or ignores its input gate.");
+        var auditRoot = ProjectSettings.GlobalizePath("user://input-audit-" + Guid.NewGuid().ToString("N"));
+        var profiles = GodotLauncherProfileStore.Open(Path.Combine(auditRoot, "profiles.json"), Path.Combine(auditRoot, "saves"));
+        var launcher = new NativeGodotLauncher();
+        profiles.Save("newvegas", root);
+        launcher.Configure(profiles);
+        var launched = false;
+        launcher.LaunchRequested += _ => launched = true;
+        AddChild(launcher);
+        try
+        {
+            if (GetViewport().GuiGetFocusOwner() is not Button focused || focused.Disabled ||
+                !focused.Text.StartsWith("Play", StringComparison.Ordinal))
+                throw new InvalidDataException("Registered installation did not focus Play in the launcher.");
+            await Press(JoyButton.A);
+            if (!launched) throw new InvalidDataException("Controller A did not launch the registered installation.");
+        }
+        finally
+        {
+            launcher.Free();
+            Directory.Delete(auditRoot, true);
+        }
+        RuntimeLiveContentSource.Configure(root, RuntimeLiveContentSource.FalloutNewVegasGame);
+        using var content = RuntimeLiveContentSource.Current!;
+        using var records = FalloutPluginStack.Load(content.PluginSources);
+        string? accepted = null;
+        var menu = new NativeGamebryoStartMenu(action => accepted = action);
+        AddChild(menu);
+        try
+        {
+            menu.SetReady(records, false);
+            Focus("sNew");
+            await Press(JoyButton.DpadDown); Focus("sLoad");
+            await Press(JoyButton.DpadUp); Focus("sNew");
+            await Press(JoyButton.A); Focus("sNo");
+            await Press(JoyButton.B); Focus("sNew");
+            if (accepted is not null) throw new InvalidDataException("Cancel accepted New Game.");
+            await Press(JoyButton.A); Focus("sNo");
+            await Press(JoyButton.DpadUp); Focus("sYes");
+            await Press(JoyButton.A);
+            if (accepted != "sNew") throw new InvalidDataException("Controller confirmation did not accept New Game.");
+            GD.Print("OPENNV_MENU_INPUT_PASS navigation=true accept=true cancel=true confirmation=true desktopRetained=true idempotent=true lookFrameRateIndependent=true");
+        }
+        finally
+        {
+            menu.GetNode<AudioStreamPlayer>("OwnedMainTitleMusic").Stop();
+            // Let the audio thread release its current playback before quitting.
+            await ToSignal(GetTree().CreateTimer(.05), SceneTreeTimer.SignalName.Timeout);
+            menu.Free();
+        }
+        return;
+
+        void Focus(string name)
+        {
+            if (GetViewport().GuiGetFocusOwner()?.Name != name)
+                throw new InvalidDataException($"Expected controller focus on {name}; got {GetViewport().GuiGetFocusOwner()?.Name}; confirmations={menu.FindChildren("confirm_container", "", true, false).Count}; accepted={accepted}.");
+        }
+        async Task Press(JoyButton button)
+        {
+            using var press = new InputEventJoypadButton { Device = 0, ButtonIndex = button, Pressed = true };
+            using var release = new InputEventJoypadButton { Device = 0, ButtonIndex = button, Pressed = false };
+            Input.ParseInputEvent(press);
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            Input.ParseInputEvent(release);
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        }
+    }
+}

@@ -12,6 +12,12 @@ public partial class NativeNifInstanceAudit : Node
     {
         try
         {
+            if (OS.GetCmdlineUserArgs() is ["--menu-input", var menuRoot])
+            {
+                await ExerciseMenuInput(menuRoot);
+                GetTree().Quit();
+                return;
+            }
             if (OS.GetCmdlineUserArgs() is ["--packed-collision", var collisionRoot, var collisionModel])
             {
                 ExerciseOwnedPackedCollision(collisionRoot, collisionModel);

@@ -66,34 +66,56 @@ do not establish Godot rendering, texture correctness, or game memory needs.
 Both AIR X Controller and virtual controller/mouse inputs are exposed; device
 selection and overlapping input need acceptance checks.
 
-## Next owners
+## Current device result and next owners
 
-1. Keep cutscenes deferred on the owner's direction; prioritize gameplay,
-   content, ordinary controls and first-save/cold-Continue acceptance.
-2. The owner reached Doc Mitchell speech, name entry with Android's keyboard,
-   and character creation on APK 0.1.4. World/HUD rendering is visible. The owner
-   reports very low frame rate and odd movement/physics. After character
-   acceptance, an earlier preview error retained the quest execution failure.
-   This is partial opening interaction, not gameplay completion.
-3. Validate live-playtest fixes: stage-scoped movie callbacks, explicit D-pad
-   navigation and focus outlines on creation Next/Back, indexed texture entries
-   taking priority over unresolved name-only entries, and first world-save
-   creation without an existing-file prerequisite. The owned beard-model audit
-   reproduces the original duplicate selection. Preserve strict ambiguity within
-   a selection tier. Native texture-selection policy is not retail pixel proof.
-4. Fix the measured Mobile compositor incompatibility: scene color lacks the
-   storage usage required by the compute output pass, causing repeated binding
-   failures. Preserve effects through a supported presentation path; do not
-   merely suppress errors or disable source effects. Measure frame time after
-   correcting resource ownership. Character previews and repeated material
-   construction also need loading/CPU measurements.
-5. Trace reference-script parsing divergence and the six missing references.
-   One admitted reference's original source contains an unmatched branch end;
-   do not silently relax the parser or invent compiled behavior.
-6. Exercise ordinary move/look, interaction, menus, first save, quit and cold
-   Continue on the Air X. Preserve continuation restrictions for active furniture,
-   speech and modal UI until their saved owners exist. A menu/probe pass does
-   not establish this sequence.
+APK 0.1.5 (code 6) reached ordinary character creation acceptance, bed exit,
+SPECIAL allocation and VCG01 stage 80. A native world save was written at stage
+55 without a prior file. Cold Continue is unverified. The current session failed
+when speech ended and package locomotion resumed: its new animation clock kept
+an old published root distance, reporting backwards accumulation. The owner
+remains in that dialogue; do not restart unsaved play without coordinating.
+
+APK 0.1.6 (code 7) is installed. An ordinary title-menu Continue after the app
+restart restored stage 55 and the room rendered. This is a selected cold-save
+restoration, not the complete interaction/save acceptance sequence:
+
+- Copy completed compute output into Mobile scene color with a color-attachment
+  draw; that scene texture does not support the old storage-image binding.
+  Synthetic Vulkan readback checks coordinates, channels, reuse and resize.
+  This transport check is separate from source rendering or device performance.
+- Honor the owner's Android preference: retain bloom and output color transfer,
+  omit automatic exposure adaptation, source blur and double vision. Gameplay
+  image-space state still updates. Other presentation modes retain their defaults.
+- Accrue quest script time on new low-FPS frames even when already overdue.
+  The regression and owned opening-program fixtures cover 60 and 6 FPS; fixture
+  callbacks are not ordinary gameplay acceptance.
+- Reset published locomotion distance when a new walk animation clock begins,
+  preserving the actual navigation path and world position.
+- Show contextual SPECIAL controller help and log character-preview preparation
+  timings. Preview diagnostics do not establish handheld layout acceptance.
+
+The required runtime gate, owned shader programs, opening-clock fixtures and
+menu input audit pass. The latter reports two leaked ObjectDB instances on exit.
+The exact 720p SPECIAL preview was inspected and deleted. Synthetic Vulkan
+attachment readback passes. Signed ARM64 export completes without warnings or
+errors; these checks do not establish ordinary device behavior.
+
+The device logs the new attachment output on its 1280x720
+A2B10G10R10UnormPack32 scene color. The prior storage-image binding failures are
+absent from the captured resumed-world log. The source reference-script parse
+divergence remains. The explicit policy log confirms bloom and output transfer
+on, automatic exposure/blur/double vision off; an older image-space summary
+still hardcodes adaptation=runtime and must be corrected in the next telemetry
+block.
+
+Next executable outcome: retry ordinary SPECIAL controls, Doc movement and the
+next-test transition from the resumed stage-55 session. Measure device frame time
+after the compositor correction; no FPS improvement is established. Keep cutscenes deferred.
+
+The six missing references, reached reference-script parsing divergence,
+movement/physics, expensive character preparation, active interaction save
+continuations and full campaign support remain open. Retain their visible errors;
+do not invent quest transitions or relax source admission to continue a demo.
 
 ## Publication boundary
 

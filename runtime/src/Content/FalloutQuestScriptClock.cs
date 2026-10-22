@@ -38,8 +38,10 @@ internal sealed class FalloutQuestScriptClock
     internal bool Advance(float seconds)
     {
         if (!float.IsFinite(seconds) || seconds < 0) throw new ArgumentOutOfRangeException(nameof(seconds));
-        // An already-due invocation does not accrue this frame's delta again.
-        if (Remaining <= 0) return true;
+        // Initial linking can publish an already-due first invocation. Later
+        // calls represent new frames, even while the countdown is overdue.
+        // Dropping those deltas makes GetSecondsPassed slow down at low FPS.
+        if (Remaining <= 0 && Invocations == 0) return true;
         var remaining = (float)((double)Remaining - seconds);
         var elapsed = (float)((double)Elapsed + seconds);
         if (!float.IsFinite(remaining) || !float.IsFinite(elapsed))

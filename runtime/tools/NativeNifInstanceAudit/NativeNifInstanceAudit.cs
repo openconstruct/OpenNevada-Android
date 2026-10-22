@@ -12,6 +12,18 @@ public partial class NativeNifInstanceAudit : Node
     {
         try
         {
+            if (OS.GetCmdlineUserArgs() is ["--special-controls", var specialRoot, var specialFrame])
+            {
+                await ExerciseSpecialControls(specialRoot, specialFrame);
+                GetTree().Quit();
+                return;
+            }
+            if (OS.GetCmdlineUserArgs() is ["--compositor-output"])
+            {
+                ExerciseCompositorOutput();
+                GetTree().Quit();
+                return;
+            }
             if (OS.GetCmdlineUserArgs() is ["--creation-materials", var creationRoot])
             {
                 ExerciseCreationMaterials(creationRoot);

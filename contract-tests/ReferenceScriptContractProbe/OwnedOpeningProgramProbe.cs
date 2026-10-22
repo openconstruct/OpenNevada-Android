@@ -6,7 +6,7 @@ using OpenNV.Runtime.World.Cells;
 // explicit fixture callbacks. This does not supply ordinary gameplay evidence.
 internal static class OwnedOpeningProgramProbe
 {
-    internal static void Run(string root)
+    internal static void Run(string root, double frameSeconds = 1d / 60)
     {
         RuntimeLiveContentSource.Configure(root, RuntimeLiveContentSource.FalloutNewVegasGame);
         using var content = RuntimeLiveContentSource.Current!;
@@ -150,8 +150,8 @@ internal static class OwnedOpeningProgramProbe
             while (spoken.TryDequeue(out var voice)) executor.ExecuteResult(voice.Info, voice.Speaker, false);
             while (scripts.TryTakeMessage(out var message)) scripts.MessageResults.Select(message!.Request!, 0);
             if (racePending) { racePending = false; scripts.ExecuteClaimedMenu(opening, 1036, questHost); }
-            scripts.AdvanceClaimed(quests.StageDone(opening, 0) ? opening : intro, 1d / 60, questHost);
-            world.AdvanceEnableChanges(1d / 60, FalloutReferenceFadeSettings.Read(settings), _ => false);
+            scripts.AdvanceClaimed(quests.StageDone(opening, 0) ? opening : intro, frameSeconds, questHost);
+            world.AdvanceEnableChanges(frameSeconds, FalloutReferenceFadeSettings.Read(settings), _ => false);
         }
         if (quests.Stage(opening) != 55 || !saveRequested || movies != 1 || namesEntered != 1 || raceMenus != 1 || idles == 0 ||
             !controls.Movement || controls.PipBoy || !scripts.Session.AutoDisplayObjectives || sky.ForcedWeather is not null)
@@ -159,6 +159,6 @@ internal static class OwnedOpeningProgramProbe
         if (!messages.Contains("CGTutorialMovement") || !messages.Contains("CGTutorialMovementRun") || messages.Contains("CGTutorialMovementXbox"))
             throw new InvalidDataException("Opening source platform conditions selected the wrong movement tutorial.");
         scripts.Capture().Validate();
-        Console.WriteLine($"OPENNV_OWNED_OPENING_PROGRAM_PASS stage=55 nativeCommandKinds={names.Count} sourceResults=true sourceTimers=true movieSuspension=true name=true raceMenu=true autosaveRequest=true ordinaryPresentation=unverified");
+        Console.WriteLine($"OPENNV_OWNED_OPENING_PROGRAM_PASS stage=55 nativeCommandKinds={names.Count} frameSeconds={frameSeconds:R} sourceResults=true sourceTimers=true movieSuspension=true name=true raceMenu=true autosaveRequest=true ordinaryPresentation=unverified");
     }
 }

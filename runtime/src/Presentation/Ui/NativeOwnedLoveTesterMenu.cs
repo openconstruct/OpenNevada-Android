@@ -25,6 +25,7 @@ internal sealed partial class NativeOwnedLoveTesterMenu : Control
     private readonly FalloutNifFile _source;
     private readonly RuntimeNifControllerPlayer _animation;
     private readonly TextureRect _pixels;
+    private readonly Label _controlGuide;
     private readonly Dictionary<string, MeshInstance3D> _geometry;
     private readonly Dictionary<string, Action> _actions = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _input = new(StringComparer.Ordinal);
@@ -103,6 +104,42 @@ internal sealed partial class NativeOwnedLoveTesterMenu : Control
             MouseFilter = MouseFilterEnum.Ignore
         };
         AddChild(_pixels);
+        var guidePanel = new PanelContainer
+        {
+            Name = "SpecialControllerGuide",
+            MouseFilter = MouseFilterEnum.Ignore,
+            Visible = OS.HasFeature("android") || Input.GetConnectedJoypads().Count != 0,
+            AnchorLeft = 1,
+            AnchorTop = .5f,
+            AnchorRight = 1,
+            AnchorBottom = .5f,
+            OffsetLeft = -196,
+            OffsetTop = -170,
+            OffsetRight = -16,
+            OffsetBottom = 170
+        };
+        var guideStyle = new StyleBoxFlat
+        {
+            BgColor = new Color(0, 0, 0, .85f),
+            ContentMarginLeft = 14,
+            ContentMarginRight = 14,
+            ContentMarginTop = 6,
+            ContentMarginBottom = 6
+        };
+        guidePanel.AddThemeStyleboxOverride("panel", guideStyle);
+        _controlGuide = new Label
+        {
+            Name = "SpecialControls",
+            MouseFilter = MouseFilterEnum.Ignore,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart
+        };
+        _controlGuide.AddThemeFontSizeOverride("font_size", 18);
+        var guideColor = _settings.InterfaceColor("HUDMain");
+        _controlGuide.AddThemeColorOverride("font_color", new Color((guideColor >> 24) / 255f,
+            ((guideColor >> 16) & 255) / 255f, ((guideColor >> 8) & 255) / 255f));
+        guidePanel.AddChild(_controlGuide); AddChild(guidePanel);
         _geometry = _animated.FindChildren("*", "", true, false).OfType<MeshInstance3D>()
             .Where(mesh => mesh.HasMeta("opennv_nif_source_name"))
             .ToDictionary(mesh => mesh.GetMeta("opennv_nif_source_name").AsString(), StringComparer.Ordinal);
@@ -250,6 +287,9 @@ internal sealed partial class NativeOwnedLoveTesterMenu : Control
     private void Refresh()
     {
         var remaining = _contract.RequiredTotal - _state.Values.Sum();
+        _controlGuide.Text = _page == 0 ? "RB: Open SPECIAL" :
+            _page == ReviewPage ? $"D-pad ↑ / ↓\nChoose stat\n\nD-pad ← / →\nAdjust stat\n\nLB: Back\nX / RB: Finish\nPoints left: {remaining}" :
+            $"LB / RB\nPrevious / next\n\nD-pad ← / →\nAdjust stat\n\nX: Finish\nPoints left: {remaining}";
         for (var index = 0; index < _state.Values.Count; index++)
         {
             var prefix = "Index_" + FalloutNativeVigorResolver.AttributeNames[index]; Number(prefix + "PointVal:0", _state.Values[index]);

@@ -45,8 +45,18 @@ internal static class QuestScriptClockProbe
         overrun.CompleteInvocation();
         Require(overrun.Capture() == new FalloutQuestScriptClockSnapshot(-1.25f, 0, 1),
             "A long frame executed a fabricated catch-up loop.");
-        Require(overrun.Advance(0.25f) && overrun.Remaining == -1.25f && overrun.Elapsed == 0,
-            "An overdue next-frame call consumed delta twice.");
+        Require(overrun.Advance(0.25f) && overrun.Remaining == -1.5f && overrun.Elapsed == .25f,
+            "An overdue next-frame invocation discarded its new frame time.");
+        var slowFrames = new FalloutQuestScriptClock(1, .01f, 0);
+        var elapsedAtInvocations = 0f;
+        for (var frame = 0; frame < 120; frame++)
+        {
+            if (!slowFrames.Advance(1f / 6)) continue;
+            elapsedAtInvocations += slowFrames.Elapsed;
+            slowFrames.CompleteInvocation();
+        }
+        Require(elapsedAtInvocations > 19.7f && elapsedAtInvocations < 20.1f && slowFrames.Invocations <= 120,
+            "Low frame rate discarded new frame time from overdue quest invocations.");
         Require(new[] { 0L, 1, 2, 7, 14, 255, 256 }.Select(index => FalloutQuestScriptInitialization.Phase(5, index))
             .SequenceEqual([5f, 2.5f, 1.25f, 4.375f, 2.1875f, 4.98046875f, 5f]),
             "Source initialization fractions or counter-byte wrap differ.");

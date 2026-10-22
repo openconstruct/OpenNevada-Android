@@ -198,8 +198,11 @@ internal partial class RuntimeNativeRaceSexEntry : CanvasLayer
     }
     private void RefreshPreview()
     {
+        var started = System.Diagnostics.Stopwatch.GetTimestamp();
         var appearance = _creation.Appearance();
+        var resolved = System.Diagnostics.Stopwatch.GetTimestamp();
         var portrait = new NativeOwnedActorPreview(_records, appearance, _settings, (int)_screen.ContentView.Size.X);
+        var constructed = System.Diagnostics.Stopwatch.GetTimestamp();
         portrait.SetIllustratedBackdrop(PortraitMode == ClassicPortraitMode.Illustrated);
         AddChild(portrait);
         try
@@ -215,6 +218,11 @@ internal partial class RuntimeNativeRaceSexEntry : CanvasLayer
             portrait.UpdateProjection(); _screen.SetPortrait(portrait);
             if (_portrait is not null) { RemoveChild(_portrait); _portrait.QueueFree(); }
             _portrait = portrait; _previewRevision = _creation.Revision;
+            if (OS.HasFeature("android"))
+                GD.Print($"OPENNV_CREATION_PREVIEW_READY revision={_previewRevision} " +
+                    $"appearanceMilliseconds={System.Diagnostics.Stopwatch.GetElapsedTime(started, resolved).TotalMilliseconds:F3} " +
+                    $"constructionMilliseconds={System.Diagnostics.Stopwatch.GetElapsedTime(resolved, constructed).TotalMilliseconds:F3} " +
+                    $"publicationMilliseconds={System.Diagnostics.Stopwatch.GetElapsedTime(constructed).TotalMilliseconds:F3}");
         }
         catch { RemoveChild(portrait); portrait.QueueFree(); throw; }
     }

@@ -4,6 +4,13 @@ using System.Text.Json;
 using OpenNV.Runtime.Content;
 using OpenNV.Runtime.World.Cells;
 
+if (args is ["--opening-clock", var openingRoot])
+{
+    OwnedOpeningProgramProbe.Run(openingRoot, 1d / 60);
+    OwnedOpeningProgramProbe.Run(openingRoot, 1d / 6);
+    return;
+}
+
 var directory = Path.Combine(Path.GetTempPath(), "opennv-reference-contract-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(directory);
 try

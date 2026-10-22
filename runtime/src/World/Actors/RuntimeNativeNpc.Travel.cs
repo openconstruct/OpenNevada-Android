@@ -84,6 +84,10 @@ internal partial class RuntimeNativeNpc
         Action<FalloutNifAnimationSample>? root = null;
         if (moving)
         {
+            // A resumed walk starts a new animation clock but retains its path
+            // cursor and world position. Its published root distance must use
+            // that same new clock instead of the pre-conversation cycle.
+            _travelPublishedDistance = 0;
             var channel = sequence.ControlledBlocks.Single(link => link.NodeName == sequence.TargetName && link.ControllerType == "NiTransformController");
             var sampler = new FalloutNifAnimationSampler(nif, channel.Interpolator);
             var start = sampler.Sample(sequence.StartTime);

@@ -1,3 +1,4 @@
+using OpenNV.Runtime.Presentation.Rendering;
 using Godot;
 
 namespace OpenNV.Runtime.Formats.Gamebryo;
@@ -37,7 +38,7 @@ internal static class NativeNifRefractionMaterial
                 ALPHA = source_alpha;
             }
             """ } };
-        output.SetShaderParameter("source_normal", result.NormalTexture);
+        NativeVariant.SetShaderParameter(output, "source_normal", result.NormalTexture);
         output.SetShaderParameter("source_alpha", material?.Alpha ?? 1);
         output.SetShaderParameter("source_period", (source.ShaderFlags & (1u << 16)) != 0 ? source.RefractionFirePeriod : 0);
         output.SetMeta("opennv_refraction_parity", "source-strength-and-period;screen-distortion-kernel-unmatched");

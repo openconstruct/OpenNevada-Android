@@ -76,28 +76,9 @@ internal static partial class RuntimeNativeNifMeshBuilder
     private const int EnvironmentTextureSlot = 4;
     private const int EnvironmentMaskTextureSlot = 5;
     private const int FalloutTextureSlots = 6;
-    private const int DdsHeaderBytes = 128;
     private const ushort DormantManagerFlags = 0x004c;
     private const ushort DormantMultiTargetFlags = 0x006c;
     private const ushort DormantDirectTransformFlags = 0x0068;
-    private const int DdsCaps2Offset = 112;
-    private const uint DdsCubemapFlag = 0x00000200;
-    private const uint DdsAllCubemapFaces = 0x0000fc00;
-    private const int DdsPositiveXFace = 0;
-    private const int DdsNegativeXFace = 1;
-    private const int DdsPositiveYFace = 2;
-    private const int DdsNegativeYFace = 3;
-    private const int DdsPositiveZFace = 4;
-    private const int DdsNegativeZFace = 5;
-    private static readonly int[] DdsGodotFaceOrder =
-    [
-        DdsPositiveXFace,
-        DdsNegativeXFace,
-        DdsPositiveZFace,
-        DdsNegativeZFace,
-        DdsNegativeYFace,
-        DdsPositiveYFace,
-    ];
     private const string EnvironmentShader = """
         shader_type spatial;
         render_mode unshaded, blend_add, depth_draw_never, cull_back;
@@ -430,8 +411,9 @@ internal static partial class RuntimeNativeNifMeshBuilder
                     skin.SetBindPose(bind, ConvertTransform(skinData.Bones[sourceBone].SkinTransform));
                 }
                 var mesh = new ArrayMesh();
-                var arrays = BuildHardwareSkinArrays(geometry, data, partition);
+                using var arrays = BuildHardwareSkinArrays(geometry, data, partition);
                 var morphs = BuildMorphArrays(mesh, geometry, data, arrays, partition.VertexMap.Select(value => (int)value).ToArray());
+                using var morphsOwner = (Godot.Collections.Array)morphs;
                 var format = partition.InfluencesPerVertex == 8 ? Mesh.ArrayFormat.FlagUse8BoneWeights : 0;
                 mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays, morphs, flags: format);
                 mesh.SurfaceSetMaterial(0, material);
@@ -479,30 +461,30 @@ internal static partial class RuntimeNativeNifMeshBuilder
             var map = partition.VertexMap;
             var arrays = new Godot.Collections.Array();
             arrays.Resize((int)Mesh.ArrayType.Max);
-            arrays[(int)Mesh.ArrayType.Vertex] = map.Select(index => ConvertVector(data.Vertices[index]) * _unitsToMetres).ToArray();
+            NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.Vertex, map.Select(index => ConvertVector(data.Vertices[index]) * _unitsToMetres).ToArray());
             if (data.Normals.Length > 0)
-                arrays[(int)Mesh.ArrayType.Normal] = map.Select(index => ConvertVector(data.Normals[index])).ToArray();
+                NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.Normal, map.Select(index => ConvertVector(data.Normals[index])).ToArray());
             if (data.Tangents.Length > 0)
-                arrays[(int)Mesh.ArrayType.Tangent] = BuildTangents(data with
+                NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.Tangent, BuildTangents(data with
                 {
                     Normals = map.Select(index => data.Normals[index]).ToArray(),
                     Tangents = map.Select(index => data.Tangents[index]).ToArray(),
                     Bitangents = map.Select(index => data.Bitangents[index]).ToArray(),
-                });
+                }));
             if (data.Colors.Length > 0)
             {
                 var colors = VertexColors(geometry, data);
-                arrays[(int)Mesh.ArrayType.Color] = map.Select(index => colors[index]).ToArray();
+                NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.Color, map.Select(index => colors[index]).ToArray());
             }
             if (data.TextureCoordinates.Length > 0)
             {
                 RequireAttributeCount(data.TextureCoordinates[0].Length, data.Vertices.Length, "UVs", data.Block.Index);
-                arrays[(int)Mesh.ArrayType.TexUV] = map.Select(index => data.TextureCoordinates[0][index])
-                    .Select(uv => new Vector2(uv.U, uv.V)).ToArray();
+                NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.TexUV, map.Select(index => data.TextureCoordinates[0][index])
+                    .Select(uv => new Vector2(uv.U, uv.V)).ToArray());
             }
-            arrays[(int)Mesh.ArrayType.Bones] = partition.BoneIndices;
-            arrays[(int)Mesh.ArrayType.Weights] = partition.Weights;
-            arrays[(int)Mesh.ArrayType.Index] = FalloutNifTriangleWinding.ToGodotIndices(partition.Triangles);
+            NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.Bones, partition.BoneIndices);
+            NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.Weights, partition.Weights);
+            NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.Index, FalloutNifTriangleWinding.ToGodotIndices(partition.Triangles));
             return arrays;
         }
 
@@ -1494,41 +1476,41 @@ internal static partial class RuntimeNativeNifMeshBuilder
                         $"NIF skin {instance.Block.Index} does not use the proven sibling-root hierarchy.");
             }
 
-            var arrays = new Godot.Collections.Array();
+            using var arrays = new Godot.Collections.Array();
             arrays.Resize((int)Mesh.ArrayType.Max);
             var vertices = new Vector3[data.Vertices.Length];
             for (var index = 0; index < vertices.Length; ++index)
                 vertices[index] = ConvertVector(data.Vertices[index]) * _unitsToMetres;
-            arrays[(int)Mesh.ArrayType.Vertex] = vertices;
-            if (morph is not null) arrays[(int)Mesh.ArrayType.TexUV2] = morph.Heights.Select(height => new Vector2(height * _unitsToMetres, 0)).ToArray();
+            NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.Vertex, vertices);
+            if (morph is not null) NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.TexUV2, morph.Heights.Select(height => new Vector2(height * _unitsToMetres, 0)).ToArray());
             if (data.Normals.Length != 0)
             {
                 var normals = new Vector3[data.Normals.Length];
                 for (var index = 0; index < normals.Length; ++index)
                     normals[index] = ConvertVector(data.Normals[index]).Normalized();
-                arrays[(int)Mesh.ArrayType.Normal] = normals;
+                NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.Normal, normals);
             }
             if (data.Tangents.Length != 0)
-                arrays[(int)Mesh.ArrayType.Tangent] = BuildTangents(data);
+                NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.Tangent, BuildTangents(data));
             if (data.Colors.Length != 0)
-                arrays[(int)Mesh.ArrayType.Color] = VertexColors(source, data);
+                NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.Color, VertexColors(source, data));
             if (data.TextureCoordinates.Length == 1)
-                arrays[(int)Mesh.ArrayType.TexUV] =
-                    data.TextureCoordinates[0].Select(uv => new Vector2(uv.U, uv.V)).ToArray();
+                NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.TexUV, data.TextureCoordinates[0].Select(uv => new Vector2(uv.U, uv.V)).ToArray());
             if (skinBinding is not null)
             {
-                arrays[(int)Mesh.ArrayType.Bones] = skinBinding.BoneIndices;
-                arrays[(int)Mesh.ArrayType.Weights] = skinBinding.Weights;
+                NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.Bones, skinBinding.BoneIndices);
+                NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.Weights, skinBinding.Weights);
             }
 
             var indices = FalloutNifTriangleWinding.ToGodotIndices(data.Triangles);
             if (indices.Length == 0)
                 throw new InvalidDataException(
                     $"NIF geometry data {data.Block.Index} contains no non-degenerate triangles.");
-            arrays[(int)Mesh.ArrayType.Index] = indices;
+            NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.Index, indices);
             var mesh = new ArrayMesh();
-            mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays,
-                BuildMorphArrays(mesh, source, data, arrays, Enumerable.Range(0, data.Vertices.Length).ToArray()));
+            var morphs = BuildMorphArrays(mesh, source, data, arrays, Enumerable.Range(0, data.Vertices.Length).ToArray());
+            using var morphsOwner = (Godot.Collections.Array)morphs;
+            mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays, morphs);
             var material = BuildMaterial(source);
             mesh.SurfaceSetMaterial(0, material);
             var result = new MeshInstance3D
@@ -1596,21 +1578,24 @@ internal static partial class RuntimeNativeNifMeshBuilder
             // absolute targets with normalized blending so the source basis
             // cancels independently of simultaneous expression weights.
             mesh.BlendShapeMode = Mesh.BlendShapeMode.Normalized;
-            var baseVertices = sourceArrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();
+            using var baseSlot = sourceArrays[(int)Mesh.ArrayType.Vertex];
+            var baseVertices = baseSlot.AsVector3Array();
+            using var normalSlot = sourceArrays[(int)Mesh.ArrayType.Normal];
+            using var tangentSlot = sourceArrays[(int)Mesh.ArrayType.Tangent];
             foreach (var (name, values) in MorphOwner(_source, geometry, data))
             {
                 if (values.Length != data.Vertices.Length) throw new InvalidDataException("Source morph vertex order differs from geometry.");
                 mesh.AddBlendShape(name);
-                var arrays = new Godot.Collections.Array();
+                using var arrays = new Godot.Collections.Array();
                 arrays.Resize((int)Mesh.ArrayType.Max);
-                arrays[(int)Mesh.ArrayType.Vertex] = vertexMap.Select((index, row) => baseVertices[row] +
-                    GamebryoCoordinate.ConvertVector(new(values[index].X, values[index].Y, values[index].Z)) * _unitsToMetres).ToArray();
+                NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.Vertex, vertexMap.Select((index, row) => baseVertices[row] +
+                    GamebryoCoordinate.ConvertVector(new(values[index].X, values[index].Y, values[index].Z)) * _unitsToMetres).ToArray());
                 // Dynamic expression normal recomputation is a separate lane;
                 // blinking must not add an unrelated packed unit direction.
-                if (sourceArrays[(int)Mesh.ArrayType.Normal].VariantType != Variant.Type.Nil)
-                    arrays[(int)Mesh.ArrayType.Normal] = sourceArrays[(int)Mesh.ArrayType.Normal];
-                if (sourceArrays[(int)Mesh.ArrayType.Tangent].VariantType != Variant.Type.Nil)
-                    arrays[(int)Mesh.ArrayType.Tangent] = sourceArrays[(int)Mesh.ArrayType.Tangent];
+                if (normalSlot.VariantType != Variant.Type.Nil)
+                    NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.Normal, normalSlot);
+                if (tangentSlot.VariantType != Variant.Type.Nil)
+                    NativeVariant.SetArrayElement(arrays, (int)Mesh.ArrayType.Tangent, tangentSlot);
                 result.Add(arrays);
             }
             return result;
@@ -2396,38 +2381,7 @@ internal static partial class RuntimeNativeNifMeshBuilder
         private Cubemap LoadCubemap(string logicalPath)
         {
             var (payload, source) = ReadTexture(logicalPath);
-            if (payload.Length < DdsHeaderBytes ||
-                !payload.AsSpan(0, 4).SequenceEqual("DDS "u8))
-                throw new InvalidDataException($"Native NIF cubemap is not DDS: {source}");
-            var caps2 = BinaryPrimitives.ReadUInt32LittleEndian(payload.AsSpan(DdsCaps2Offset));
-            if ((caps2 & DdsCubemapFlag) == 0 ||
-                (caps2 & DdsAllCubemapFaces) != DdsAllCubemapFaces ||
-                (payload.Length - DdsHeaderBytes) % DdsGodotFaceOrder.Length != 0)
-                throw new InvalidDataException(
-                    $"Native NIF environment texture is not a complete six-face DDS cubemap: {source}");
-            var faceBytes = (payload.Length - DdsHeaderBytes) / DdsGodotFaceOrder.Length;
-            var images = new Godot.Collections.Array<Image>();
-            foreach (var sourceFace in DdsGodotFaceOrder)
-            {
-                var facePayload = new byte[checked(DdsHeaderBytes + faceBytes)];
-                payload.AsSpan(0, DdsHeaderBytes).CopyTo(facePayload);
-                BinaryPrimitives.WriteUInt32LittleEndian(facePayload.AsSpan(DdsCaps2Offset), 0);
-                payload.AsSpan(DdsHeaderBytes + sourceFace * faceBytes, faceBytes)
-                    .CopyTo(facePayload.AsSpan(DdsHeaderBytes));
-                var image = new Image();
-                var error = image.LoadDdsFromBuffer(facePayload);
-                if (error != Error.Ok || image.IsEmpty())
-                    throw new InvalidDataException(
-                        $"Godot could not decode native NIF cubemap face {sourceFace} from {source}: {error}");
-                images.Add(image);
-            }
-            NativeDdsTexture.PreserveCubeAlpha(images);
-            var result = new Cubemap();
-            var createError = result.CreateFromImages(images);
-            if (createError != Error.Ok)
-                throw new InvalidDataException(
-                    $"Godot could not create native NIF cubemap {source}: {createError}");
-            return result;
+            return NativeDdsTexture.LoadCubemap(payload, source);
         }
 
         private static ShaderMaterial BuildEnvironmentPass(
@@ -2444,9 +2398,9 @@ internal static partial class RuntimeNativeNifMeshBuilder
                     Code = lightFade ? EnvironmentLightFadeShader : EnvironmentShader,
                 },
             };
-            result.SetShaderParameter("normal_map", normal);
-            result.SetShaderParameter("environment_cube", environment);
-            result.SetShaderParameter("environment_mask", mask ?? normal);
+            NativeVariant.SetShaderParameter(result, "normal_map", normal);
+            NativeVariant.SetShaderParameter(result, "environment_cube", environment);
+            NativeVariant.SetShaderParameter(result, "environment_mask", mask ?? normal);
             result.SetShaderParameter("use_environment_mask", mask is not null);
             result.SetShaderParameter("environment_scale", scale);
             result.SetMeta("opennv_environment_light_fade", lightFade);

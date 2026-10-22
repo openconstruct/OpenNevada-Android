@@ -112,7 +112,7 @@ internal static class NativeNifEffectMaterial
                 .Replace("__REPEAT__", FalloutNifTextureAddressing.RepeatForGodot(source.TextureClampMode) ? "repeat_enable" : "repeat_disable")
             },
         };
-        if (texture is not null) result.SetShaderParameter("source_texture", texture);
+        if (texture is not null) NativeVariant.SetShaderParameter(result, "source_texture", texture);
         result.SetShaderParameter("source_has_texture", texture is not null);
         result.SetShaderParameter("source_emissive_multiple", material?.EmissiveMultiple ?? 1);
         result.SetMeta("opennv_source_emissive_color", material is null ? Vector3.One :

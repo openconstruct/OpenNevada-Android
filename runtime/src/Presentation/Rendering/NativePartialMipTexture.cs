@@ -47,6 +47,7 @@ internal sealed partial class NativePartialMipTexture : Texture2Drd
         if (failure is not null) { result.Dispose(); throw new InvalidDataException("Partial DDS upload failed.", failure); }
         result.SetMeta("opennv_dds_source_format", chain.Format);
         result.SetMeta("opennv_dds_authored_levels", chain.Levels.Count);
+        result.SetMeta("opennv_dds_upload_payload_bytes", bytes.LongLength - 128);
         return result;
     }
 

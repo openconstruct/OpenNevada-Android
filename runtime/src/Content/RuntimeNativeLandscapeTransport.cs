@@ -27,7 +27,6 @@ internal static class RuntimeNativeLandscapeTransportBuilder
     private const int QuadrantLastVertex = FalloutLandscapeTransportResolver.QuadrantVertexSide - 1;
     private const int TriangleIndicesPerQuad = 6;
     private const float ColorChannelMaximum = byte.MaxValue;
-    private static readonly Dictionary<string, Shader> Shaders = new(StringComparer.Ordinal);
 
     internal static RuntimeNativeLandscapeTransport Build(
         FalloutLandscapeTransport source,
@@ -164,7 +163,7 @@ internal static class RuntimeNativeLandscapeTransportBuilder
             .AppendLine("ALBEDO = albedo * COLOR.rgb; EMISSION = ALBEDO * owned_environment_ambient(); NORMAL_MAP = normalize(normal_sample) * 0.5 + 0.5; FOG = vec4(owned_environment_fog_color(), source_fog_factor); }");
         RetailLighting.AppendDiffuseLightFunction(shader);
         var code = shader.ToString();
-        if (!Shaders.TryGetValue(code, out var compiled)) Shaders.Add(code, compiled = new Shader { Code = code });
+        var compiled = NativeShaderResources.Load(code);
         material.Shader = compiled;
         foreach (var (name, value) in parameters) material.SetShaderParameter(name, value);
         return material;

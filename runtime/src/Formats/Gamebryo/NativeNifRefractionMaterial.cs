@@ -15,7 +15,7 @@ internal static class NativeNifRefractionMaterial
             throw new NotSupportedException("Refraction requires its source normal map and nonnegative period.");
         if (alpha is not null && (alpha.Flags & 1) != 0)
             throw new NotSupportedException("Source refraction with additional alpha blending has no compositor owner.");
-        var output = new ShaderMaterial { ResourceName = ResourceIdentity, Shader = new Shader { Code = $$"""
+        var output = new ShaderMaterial { ResourceName = ResourceIdentity, Shader = NativeShaderResources.Load($$"""
             shader_type spatial;
             render_mode unshaded, blend_mix, {{(result.CullMode == BaseMaterial3D.CullModeEnum.Disabled ? "cull_disabled" : "cull_back")}},
                 {{((source.ShaderFlags2 & 1) != 0 ? "depth_draw_always" : "depth_draw_never")}};
@@ -37,7 +37,7 @@ internal static class NativeNifRefractionMaterial
                 ALBEDO = texture(scene_color, SCREEN_UV + direction.xy * source_strength).rgb;
                 ALPHA = source_alpha;
             }
-            """ } };
+            """) };
         NativeVariant.SetShaderParameter(output, "source_normal", result.NormalTexture);
         output.SetShaderParameter("source_alpha", material?.Alpha ?? 1);
         output.SetShaderParameter("source_period", (source.ShaderFlags & (1u << 16)) != 0 ? source.RefractionFirePeriod : 0);

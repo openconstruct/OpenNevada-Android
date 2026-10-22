@@ -2,113 +2,119 @@
 
 ## Objective and boundaries
 
-Make the experimental ARM64 Android build fit the owner's Mangmi Air X without
-omitting owned content or reducing authored texture quality. Keep the shared
-C#/Godot gameplay and persistence path. Work without subagents. Cutscenes remain
-deferred. Full campaign support and ordinary interaction/combat/travel acceptance
-remain open. Selected rendering and restoration checks are not parity proof.
+Make the experimental ARM64 Android runtime fit the owner's Mangmi Air X while
+preserving owned content admission and authored texture quality. Keep the shared
+C#/Godot gameplay/save path. No subagents. Cutscenes stay deferred. Full campaign,
+ordinary travel/combat chains and physical controller acceptance remain open.
+A rendered checkpoint is not parity or whole-world support.
 
-Retail inputs are private and read-only. The 277 installation files already
-matched the owner's host installation by SHA-256; do not transfer them again.
-Desktop graphics tests are disabled: an earlier Vulkan fixture triggered AMD
-flip/commit timeouts and a desktop lockup. Use CPU/headless checks and the handheld;
-do not reset the desktop display/GPU.
+Retail inputs are private/read-only. All 277 installation files already matched
+the host by SHA-256; do not transfer again. Desktop GPU/X11 tests are prohibited:
+an earlier Vulkan fixture caused AMD/Xorg timeouts and a desktop hang. Use
+CPU/headless checks and handheld rendering; do not reset the desktop display/GPU.
 
-## Current build and device
+## Candidate and settings
 
-APK 0.1.12/code 13 is installed. Android 14/API 34, ARM64, about 3.57 GiB physical
-memory and 2.5 GiB LZ4 zram. The current driver identifies Qualcomm Adreno 610,
-Vulkan 1.1.295. Earlier runs used Turnip/Vulkan 1.0.328; do not treat those runs
-as controlled comparisons. No driver setting was changed by this work.
+APK 0.1.14/code 15 is installed, SHA-256
+`e02e1371854b00fdc4f840ac9b9bb615367fccace6219810e5901fdc99c4cbba`.
+Runtime changes are in PR #15, based on merged PR #14/main 61f59f8. No GitHub
+checks were scheduled; the required local runtime gate, selected owned checks
+and bounded physical chain below passed.
+
+Android 14/API 34, SM6115/Adreno 610, about 3.57 GiB physical memory and 2.5 GiB
+LZ4 zram. Current driver: Qualcomm Vulkan 1.1.295. Older runs used Turnip 1.0.328;
+no driver changes were made by this work. ADB port 5038 currently owns USB.
 
 Managed Android optimization is enabled. Owned uGridsToLoad=5 selects 25 cells
-and 2,337 references rather than the previous forced 49/3,683. Internal 3D is
-960x540; UI/output is 1280x720. Bloom, blur, double vision and exposure adaptation
-are disabled. Output conversion, tint and fades remain active. The native
-non-interactive top-right FPS counter updates while paused. Loading FPS may be
-stale when synchronous preparation blocks drawing.
+and 2,337 references. Internal 3D is 960x540; UI/output is 1280x720. Bloom, blur,
+double vision and exposure adaptation are off. Output conversion/tint/fades and
+the top-right FPS overlay remain. Loading FPS/counters can be stale while work
+blocks drawing. The raw-source LRU is 128 MiB on Android, 512 MiB on desktop;
+it does not account for readers' arrays, decoded objects or graphics resources.
 
-The Android source-payload LRU budget is 128 MiB; desktop remains 512 MiB.
-Its counter measures retained raw bytes only, excluding readers' arrays, decoded
-objects and graphics resources. The smaller cache evicted about 53 MiB during
-an earlier attempt but did not prevent Android LOW_MEMORY.
+## Resource ownership changes
 
-## Shared uploads and native lifetime
+Immutable 2D DDS/cubemaps reuse by winning identity, actual byte hash, normal
+validation policy and resource kind. Native-ID indexes do not retain textures.
+Scoped Variants and mesh/morph/cubemap containers promptly release temporary
+references. Cubemap readback verified all six faces and authored mips on-device.
+Transparent BC1 still uses the original RGBA fallback: compressed-alpha support
+needs a native Godot wrapper change. Its measured outdoor expansion was about
+46 MiB beyond compressed payloads; no gigabyte saving is implied by that lane.
 
-Immutable 2D DDS textures and cubemaps now reuse native resources. Keys include
-winning source identity, SHA-256 of actual bytes, normal validation policy and
-resource kind. The per-installation index stores native instance IDs without
-owning textures; native material/scene ownership controls lifetime. Expired
-metadata is pruned. Animated materials/controllers retain independent state.
+Code 15 also shares exact-source immutable Shader programs through a non-owning
+native-ID index. NIF, LAND/LOD, sky and FaceGen keep separate mutable materials
+and uniforms. Permanent shader pins and redundant strong FaceGen DDS caching
+are removed. The ordinary SLS builder disposes its temporary StandardMaterial
+input container and copied environment pass after the final material owns inputs.
 
-Scoped Variants release temporary packed mesh arrays and resource-valued shader
-arguments promptly. Mesh/morph array containers and cubemap face images are
-released after their destination takes ownership. Synthetic and owned-data
-checks prove reuse after a managed wrapper is disposed while native materials
-retain it; unused-resource release; changed bytes/source/policy isolation;
-independent materials; authored alpha/mips; and immediate native packed-buffer
-release without managed collection. The owned NPC assembly check retains all
-13 Doc Mitchell parts and exact preparation vectors.
+After a door's authoritative commit/autosave, the destination remains hidden
+while the old room and prototypes outside its model set retire. Three bounded
+collection/finalizer passes drain mesh -> material -> shader/texture ownership;
+hidden frames drain the rendering device frame ring before reveal. Gameplay
+stays paused during this boundary. Save/retirement failures release the gate.
+The selected owned audit proves retained destination geometry/contact ownership,
+nested source-resource release and failure cleanup.
 
-Performance snapshots label upload/reuse payload bytes as cumulative work,
-not resident GPU/driver memory. They also report transparent-BC1 expansion.
-The device supports BC1 RGB/RGBA, BC2 and BC3. However, this Godot version's
-ordinary DXT1 upload path forces opaque BC1 and its Texture2DRD wrapper lacks
-BC1_RGBA mapping. Transparent BC1 still uses the existing RGBA fallback;
-compressed-alpha support is not implemented. The measured outdoor expansion
-was roughly 46 MiB beyond compressed payload size, not gigabytes.
+Upload/program counters are cumulative work, not resident memory. A partial
+allocation profile sampled about 242 MiB of new outstanding allocations during
+six seconds of exterior preparation: about 194 MiB through Godot, 47 MiB through
+Vulkan and 1 MiB through Mono. Stripped C++ symbols prevent precise Godot-owner
+attribution. The failed startup profile was discarded. Traced, traced_probes
+and heapprofd were restored to stopped with persist.traced.enable=0. Stale log
+collectors from previous failed processes were stopped.
 
-An opt-in first-cubemap resource readback verifies all six faces and authored
-mips against uploaded RGBA bytes. Code 13 passed this check on the handheld for
-an owned environment map. No frame recording is enabled by this check.
+## Physical result
 
-## Physical results and saves
+Code 13 completed exterior preparation/commit then hit LOW_MEMORY before drawing.
+Code 14 died during preparation, before its new retirement boundary could execute;
+a cold exterior attempt also hit LOW_MEMORY. Those runs do not isolate a code-14
+regression cause. Both authentic interior and exterior saves remain backed up.
 
-The intermediate code-12 build on the same Qualcomm driver reduced Godot's
-tracked interior video memory from about 389 MiB to 176 MiB. Its 765 texture
-reuses are cumulative work avoided, not resident RAM saved. Stationary interior
-performance was about 28–30 FPS, with no sustained-30 gameplay acceptance.
+Code 15 PID 13460 on the same driver/source save:
 
-Ordinary door activation passed the previous prototype-350 failure point:
-406 prototypes and terrain finished, the exterior committed and wrote an
-authentic exterior autosave. Android then killed the process for LOW_MEMORY
-before its first exterior frame. Cold Continue from that autosave rendered
-Goodsprings using the owned 5x5 grid. Initial performance was roughly 4–9 FPS
-with about 2,178 draw calls. This does not establish a successful live transition
-or acceptable exterior performance.
+- Room: about 28–30 FPS stationary. Allocated native heap about 738 MiB versus
+  about 1,080 MiB in code 13; one-run reduction about 342 MiB. Tracked video
+  memory is about 172 MiB. These counters overlap and are not separate RAM bins.
+- Ordinary door activation 18:06:59 local. Models ready 18:07:39, terrain ready
+  18:07:42, authentic exterior autosave 18:07:44. Source retirement finished
+  18:07:55: 406 -> 213 prototypes and about 604 -> 463 MiB managed live data.
+- First exterior draw telemetry 18:08:26, about 87 seconds after activation.
+  A temporary frame confirmed Goodsprings; it was inspected and deleted.
+- The exterior stayed alive for roughly three minutes of visible rendering
+  before the planned cold restart. It measured about 7–10 FPS and 2,166–2,214
+  draw calls. One snapshot had native heap allocated about 1.32 GiB, RSS about
+  1.3–1.4 GiB and process swap roughly 0.7–1.0 GiB. No sustained-30 claim.
+- Ordinary movement changed the saved position by about 0.96 m. F5 created a
+  valid manual slot and updated Continue. Predictive grid preparation ran; this
+  does not establish a completed neighboring-cell commit or broad travel.
 
-Both the original interior save and newer exterior autosave are privately
-backed up. Code 13 was installed and the exact original interior backup restored
-and checksum verified for the repeatable door test. Ordinary Continue reached
-cell-ready and authoritative world restoration. The cubemap GPU check passed.
-USB then disappeared before the first gameplay frame could be verified; the
-new native-lifetime changes' physical memory/performance impact and live door
-transition remain unmeasured. Do not infer a crash from the lost connection.
-The final device screen/running state is unknown until USB reconnects.
-
-The owner completed SPECIAL, association, inkblots, tags and traits, reaching
-VCG01 stage 200. Touch worked for tags/traits; newer controller changes still
-need physical acceptance. A transient right-stick failure resolved after reload;
-its owner remains open.
+Cold Continue from that ordinary moved exterior save passed in fresh PID 14483:
+Continue at 18:12:53, compositor/first exterior draw at 18:15:06–07 (about 133
+seconds), later about 6–9 FPS. A temporary frame confirmed the restored view and
+was deleted. The device was left paused in Goodsprings at 18:16:00. Paused FPS
+was about 12; this coarse observation does not isolate CPU/GPU cost. The primary
+save, manual slot and private backup match by SHA-256. The original interior,
+code-12/code-13 exterior and code-15 door/manual checkpoints are also preserved.
+Do not edit save fields or inject player/world state to manufacture success.
 
 ## Verification and next owners
 
-Code 13 passes the complete required CPU/headless runtime gate: Release/Debug
-builds, formatting/analyzers, contract probes, launcher checks and native Godot
-audits. Selected owned DDS ownership and NPC assembly checks pass. Android debug
-export succeeds and APK v2/v3 signatures verify. No desktop GPU test was run.
+Code 15 passes the full required Release/Debug, formatting/analyzer, contract,
+launcher and native headless Godot gate, plus selected owned DDS, Shader,
+cell-handoff and NPC assembly audits (all 13 Doc parts retained). Android export
+and v2/v3 signatures pass. No desktop GPU test or frame recording was run.
 
-1. Reconnect USB, identify the current device state and complete the same-save
-   interior/door test. Verify first exterior rendering, not only commit/autosave.
-2. Trace remaining transition overlap and prototype/resource ownership against
-   measured LOW_MEMORY. Do not omit scenery or invent location-specific limits.
-3. Measure outdoor frame time and draw submission; 2,178 draw calls and 4–9 FPS
-   show that fitting memory alone will not establish sustained 30 FPS.
-4. Keep unsupported exterior controllers, Doc's unresolved travel/procedure,
-   six missing interior references and unmatched reference-script branch visible.
-   Exercise ordinary menus, travel, saving and cold Continue as a chain.
+1. Profile outdoor frame time and draw submission toward 30 FPS; memory fitting
+   alone does not solve 7–10 FPS. Keep texture quality and owned admission intact.
+2. Exercise repeated doors, neighboring-cell commits and longer travel to bound
+   warm-resource growth. One successful exit does not establish overall stability.
+3. Preserve visible source gaps: 342 missing/unbound exterior references in the
+   selected grid, unsupported SPT resources/controllers, property-free LOD
+   material ownership, reference scripts/playGroup, Doc's travel/procedure and
+   six earlier missing interior refs. Do not hide them or claim campaign parity.
+4. Physical tag/trait controller acceptance and the transient right-stick focus
+   loss remain open. Earlier menu diagnostics reported two ObjectDB leaks.
 
-Earlier UI diagnostics reported two ObjectDB leaks; this separate issue remains
-open. Initial compositor stalls of roughly 45 seconds and about 102-second total
-Continue loading were observed earlier; shader/pipeline compilation versus other
-first-frame work has not been isolated.
+First-frame compositor stalls remain long and unisolated; older Continue runs
+took about 100 seconds. The owner completed Doc's opening through VCG01 stage 200.

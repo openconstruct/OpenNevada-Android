@@ -912,6 +912,7 @@ public partial class RuntimeCoordinator
             targetRoot = BuildNativeCellRoot(targetScene, null, sourceSide: false);
             RuntimePerformanceObserver.Mark("door-models-ready", _nativeNifPrototypes.Count);
             targetRoot.ProcessMode = ProcessModeEnum.Disabled;
+            targetRoot.Hide();
             if (grid is not null) AddExteriorLandscape(targetRoot, grid);
             RuntimePerformanceObserver.Mark("door-landscape-ready", _nativeNifPrototypes.Count);
             AddChild(targetRoot);
@@ -946,12 +947,30 @@ public partial class RuntimeCoordinator
         }
         player.Teleport(TeleportTransform(entry));
         SetNativeActiveCell(targetRoot, targetScene);
-        targetRoot.ProcessMode = ProcessModeEnum.Inherit;
         foreach (var (body, mode) in arrivalCollision) body.DisableMode = mode;
         current.ProcessMode = ProcessModeEnum.Disabled;
-        current.QueueFree();
-        RuntimePerformanceObserver.Mark("door-committed-source-deletion-queued", _nativeNifPrototypes.Count);
-        _nativeOpeningStageDriver!.PersistWorldState(targetScene.Cell.FormKey);
+        try
+        {
+            _nativeOpeningStageDriver!.PersistWorldState(targetScene.Cell.FormKey);
+            RuntimePerformanceObserver.Mark("door-committed-source-retirement", _nativeNifPrototypes.Count);
+            await NativeCellPresentationHandoff.Retire(this, current, targetRoot, () =>
+            {
+                var models = targetScene.References.Select(value => targetScene.BaseObjects[value.Base].ModelPath)
+                    .Where(path => path is not null).Select(path => path!).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                NativeNifPrototypeResidency.Trim(_nativeNifPrototypes, models);
+                _nativeRecentModelSets.Clear();
+                _nativeRecentModelSets.Enqueue(models);
+            });
+        }
+        finally
+        {
+            // The authoritative commit already happened. A save/retirement
+            // failure must still release presentation and leave controls usable.
+            if (GodotObject.IsInstanceValid(current)) current.QueueFree();
+            targetRoot.Show();
+            targetRoot.ProcessMode = ProcessModeEnum.Inherit;
+        }
+        RuntimePerformanceObserver.Mark("door-source-retired", _nativeNifPrototypes.Count);
         GD.Print(
             $"OPENNV_NATIVE_DOOR_STREAM source={active.Cell.FormKey} destination={targetScene.Cell.FormKey} " +
             $"door={reference.FormKey} " +

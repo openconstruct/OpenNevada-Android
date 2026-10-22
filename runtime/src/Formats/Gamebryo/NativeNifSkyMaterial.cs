@@ -7,7 +7,6 @@ namespace OpenNV.Runtime.Formats.Gamebryo;
 internal static class NativeNifSkyMaterial
 {
     internal const string Identity = "Owned NIF sky";
-    private static readonly Dictionary<uint, Shader> Shaders = [];
 
     internal static ShaderMaterial? TryBuild(FalloutNifFile source, FalloutNifGeometry geometry)
     {
@@ -23,8 +22,7 @@ internal static class NativeNifSkyMaterial
         };
         if (declaration.Controller != -1 || declaration.ExtraData.Length != 0)
             throw new NotSupportedException("Sky material has an unbound controller or extra data.");
-        if (!Shaders.TryGetValue(declaration.SkyObjectType, out var shader))
-            Shaders.Add(declaration.SkyObjectType, shader = new Shader { Code = code });
+        var shader = NativeShaderResources.Load(code);
         var result = new ShaderMaterial
         {
             Shader = shader,

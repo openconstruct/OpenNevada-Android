@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using Godot;
 using OpenNV.Runtime.Content;
 using OpenNV.Runtime.Formats.Gamebryo;
@@ -16,8 +15,6 @@ internal static class NativeFaceGenMaterial
     private const uint DepthTestFlag = 1U << 31;
     private const uint DepthWriteFlag = 1U;
     private const uint VertexColorsFlag = 1U << 5;
-    private static readonly ConditionalWeakTable<RuntimeLiveContentSource, Dictionary<string, Texture2D>> Textures = new();
-    private static readonly Dictionary<string, Shader> Shaders = new(StringComparer.Ordinal);
 
     internal static ShaderMaterial Create(FalloutNpcFaceMaterialInputs inputs,
         FalloutNifFile source, FalloutNifGeometry geometry, RuntimeLiveContentSource content,
@@ -102,8 +99,7 @@ internal static class NativeFaceGenMaterial
             }
         }
         var code = BuildShader(string.Join(", ", modes), repeats, alphaTest);
-        if (!Shaders.TryGetValue(code, out var compiled))
-            Shaders.Add(code, compiled = new Shader { Code = code });
+        var compiled = NativeShaderResources.Load(code);
         var result = new ShaderMaterial { Shader = compiled, ResourceName = ResourceIdentity };
         NativeVariant.SetShaderParameter(result, "base_map", Load(content, inputs.BaseTexturePath));
         NativeVariant.SetShaderParameter(result, "normal_map", Load(content, inputs.NormalTexturePath));
@@ -195,14 +191,10 @@ internal static class NativeFaceGenMaterial
 
     private static Texture2D Load(RuntimeLiveContentSource content, string path)
     {
-        var cache = Textures.GetValue(content, _ => new(StringComparer.OrdinalIgnoreCase));
-        if (cache.TryGetValue(path, out var texture))
-            return texture;
         if (!content.TryRead(path, null, out var bytes, out var identity))
             throw new FileNotFoundException($"Source FaceGen texture is missing: {path}");
-        texture = NativeDdsTexture.Load(bytes, identity);
+        var texture = NativeDdsTexture.Load(bytes, identity);
         texture.SetMeta("opennv_source_texture", identity);
-        cache.Add(path, texture);
         return texture;
     }
 

@@ -12,6 +12,18 @@ public partial class NativeNifInstanceAudit : Node
     {
         try
         {
+            if (OS.GetCmdlineUserArgs() is ["--shader-sharing", var shaderRoot])
+            {
+                await ExerciseShaderSharing(shaderRoot);
+                GetTree().Quit();
+                return;
+            }
+            if (OS.GetCmdlineUserArgs() is ["--cell-handoff", var handoffRoot])
+            {
+                await ExerciseCellHandoff(handoffRoot);
+                GetTree().Quit();
+                return;
+            }
             if (OS.GetCmdlineUserArgs() is ["--dds-sharing", var sharingRoot])
             {
                 await ExerciseDdsSharing(sharingRoot);

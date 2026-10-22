@@ -21,6 +21,8 @@ public partial class NativeNifInstanceAudit
         {
             var sun = environment.GetChildren().OfType<DirectionalLight3D>().Single();
             var color = sun.LightColor; var energy = sun.LightEnergy; var basis = sun.Basis;
+            var fog = environment.GetChildren().OfType<WorldEnvironment>().Single().Environment;
+            var sourceFogBegin = fog.FogDepthBegin; var sourceFogEnd = fog.FogDepthEnd;
             GetTree().Paused = true;
             try
             {
@@ -33,6 +35,21 @@ public partial class NativeNifInstanceAudit
                     Require(sun.LightColor == color && sun.LightEnergy == energy && sun.Basis == basis &&
                         System.Text.Json.JsonSerializer.Serialize(sky.Capture()) == initial, "Shadow quality changed source sunlight or authoritative sky state.");
                 }
+                var camera = new Camera3D { Near = .05f, Far = 1000 };
+                scene.AddChild(camera);
+                RuntimeViewDistance.Configure(["--view-distance-meters", "200"]);
+                RuntimeViewDistance.Apply(camera, 3571);
+                Require(camera.Far == 200 && fog.FogDepthEnd <= 190.001f && fog.FogDepthBegin < fog.FogDepthEnd,
+                    "Handheld view distance missed camera clipping or source-material fog while paused.");
+                Require(System.Text.Json.JsonSerializer.Serialize(sky.Capture()) == initial,
+                    "Presentation distance changed authoritative source weather.");
+                var scaledFog = RuntimeViewDistance.Fog(10000, 20000, .01f);
+                Require(Math.Abs(scaledFog.Far * .01f - 190) < .001f && scaledFog.Near < scaledFog.Far,
+                    "View distance did not convert metres to source fog units.");
+                RuntimeViewDistance.Configure([]);
+                RuntimeViewDistance.Apply(camera, 3571);
+                Require(camera.Far == 3571 && fog.FogDepthBegin == sourceFogBegin && fog.FogDepthEnd == sourceFogEnd,
+                    "Removing the presentation cap did not restore original camera/fog distance.");
             }
             finally { GetTree().Paused = false; }
             foreach (var invalid in new[] { new[] { "--sun-shadows" }, new[] { "--sun-shadows", "3" }, new[] { "--sun-shadows", "NaN" } })
@@ -40,13 +57,20 @@ public partial class NativeNifInstanceAudit
                 try { RuntimeSunShadows.Configure(invalid); throw new InvalidOperationException("Invalid shadow policy admitted."); }
                 catch (ArgumentException) { }
             }
+            foreach (var value in new[] { "0", "-1", "NaN", "Infinity" })
+            {
+                try { RuntimeViewDistance.Configure(["--view-distance-meters", value]); throw new InvalidOperationException("Invalid distance admitted."); }
+                catch (ArgumentOutOfRangeException) { }
+            }
         }
-        finally { scene.Free(); RuntimeSunShadows.Configure([]); }
+        finally { scene.Free(); RuntimeSunShadows.Configure([]); RuntimeViewDistance.Configure([]); }
         // A detached environment must unsubscribe before future changes.
         RuntimeSunShadows.Set(2);
+        RuntimeViewDistance.Set(200);
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         RuntimeSunShadows.Configure([]);
+        RuntimeViewDistance.Configure([]);
         Require(RuntimeSunShadows.Cascades == 4, "Desktop quality default changed.");
-        GD.Print("OPENNV_SUN_SHADOW_POLICY_PASS ownedWeather=true pausedChanges=true lightingRetained=true invalidRejected=true detachedOwnerReleased=true defaultFour=true");
+        GD.Print("OPENNV_SUN_SHADOW_POLICY_PASS ownedWeather=true pausedChanges=true lightingRetained=true invalidRejected=true detachedOwnerReleased=true defaultFour=true viewDistance=200 fogUnits=true sourceDistanceRestored=true");
     }
 }

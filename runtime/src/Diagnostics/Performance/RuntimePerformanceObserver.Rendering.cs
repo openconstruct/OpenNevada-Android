@@ -6,7 +6,9 @@ internal partial class RuntimePerformanceObserver
 {
     private readonly HashSet<Viewport> _viewports = [];
     private sealed record ViewportCost(string Name, double CpuMilliseconds, double GpuMilliseconds);
-    private sealed record RenderCost(ulong SampleMilliseconds, double SetupCpuMilliseconds, ViewportCost[] Viewports);
+    private sealed record RenderCost(ulong SampleMilliseconds, int SunShadowCascades, float WorldScale,
+        float? ViewDistanceMeters, float? CameraFarMeters,
+        double SetupCpuMilliseconds, ViewportCost[] Viewports);
     private RenderCost? _renderCost;
     private int _renderCostPending;
 
@@ -37,6 +39,10 @@ internal partial class RuntimePerformanceObserver
         if (Interlocked.CompareExchange(ref _renderCostPending, 1, 0) == 0)
         {
             var views = _viewports.Select(view => (Name: view.Name.ToString(), Rid: view.GetViewportRid())).ToArray();
+            var cascades = Presentation.Rendering.RuntimeSunShadows.Cascades;
+            var scale = GetViewport().Scaling3DScale;
+            var distance = Presentation.Rendering.RuntimeViewDistance.Meters;
+            var far = GetViewport().GetCamera3D()?.Far;
             RenderingServer.CallOnRenderThread(Callable.From(() =>
             {
                 try
@@ -44,7 +50,7 @@ internal partial class RuntimePerformanceObserver
                     var costs = views.Select(view => new ViewportCost(view.Name,
                         RenderingServer.ViewportGetMeasuredRenderTimeCpu(view.Rid),
                         RenderingServer.ViewportGetMeasuredRenderTimeGpu(view.Rid))).ToArray();
-                    Volatile.Write(ref _renderCost, new(Time.GetTicksMsec(), RenderingServer.GetFrameSetupTimeCpu(), costs));
+                    Volatile.Write(ref _renderCost, new(Time.GetTicksMsec(), cascades, scale, distance, far, RenderingServer.GetFrameSetupTimeCpu(), costs));
                 }
                 finally { Volatile.Write(ref _renderCostPending, 0); }
             }));

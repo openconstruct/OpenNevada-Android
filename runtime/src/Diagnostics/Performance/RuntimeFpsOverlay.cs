@@ -59,6 +59,8 @@ internal sealed partial class RuntimeFpsOverlay : CanvasLayer
             var scale = view.Scaling3DScale > .76f ? "0.75" : view.Scaling3DScale > .51f ? "0.5" : "1";
             RuntimeRenderScale.Apply(view, ["--render-scale-3d", scale], false);
         }
+        else if (key.Keycode == Key.F8)
+            RuntimeViewDistance.Set(RuntimeViewDistance.Meters switch { null => 200, 200 => 100, 100 => 300, _ => null });
         else return;
         GetViewport().SetInputAsHandled();
     }

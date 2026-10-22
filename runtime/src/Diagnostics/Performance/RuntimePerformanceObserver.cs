@@ -18,7 +18,7 @@ internal partial class RuntimePerformanceObserver : Node
         LogSnapshot(prototypes);
     }
 
-    private static void LogSnapshot(int? prototypes = null, object? renderCost = null)
+    private static void LogSnapshot(int? prototypes = null)
     {
         var optimized = !(typeof(RuntimePerformanceObserver).Assembly
             .GetCustomAttributes(typeof(System.Diagnostics.DebuggableAttribute), false)
@@ -52,8 +52,6 @@ internal partial class RuntimePerformanceObserver : Node
             residentKiB,
             swapKiB,
             prototypes,
-            sunShadowCascades = Presentation.Rendering.RuntimeSunShadows.Cascades,
-            renderCost,
             sourcePayloadCache = Content.RuntimeLiveContentSource.Current?.CacheState,
             textureSharing = Presentation.Rendering.NativeDdsTexture.SharingState,
             shaderSharing = Presentation.Rendering.NativeShaderResources.State
@@ -112,7 +110,9 @@ internal partial class RuntimePerformanceObserver : Node
         if (LogEnabled && Time.GetTicksMsec() - _lastLogMilliseconds >= 5000)
         {
             _lastLogMilliseconds = Time.GetTicksMsec();
-            LogSnapshot(renderCost: SampleRenderCost());
+            var renderCost = SampleRenderCost();
+            if (renderCost is not null) GD.Print("OPENNV_RENDER_COST " + JsonSerializer.Serialize(renderCost));
+            LogSnapshot();
         }
         _elapsedSeconds += delta;
         if (_elapsedSeconds < _configuration.SampleIntervalSeconds)

@@ -15,11 +15,12 @@ CPU/headless checks and handheld rendering; do not reset the desktop display/GPU
 
 ## Candidate and settings
 
-APK 0.1.15/code 16 is installed, SHA-256
-`2a832ef237c3b749ed8f83577abf011f9dc589562da535b85d39f4a8da7e267e`.
-It adds render timings and reversible quality probes to merged PR #15/main
-dffaa93. The required local runtime gate and selected owned sun/weather check
-pass. This diagnostic build does not establish an FPS improvement.
+APK 0.1.16/code 17 is installed, SHA-256
+`ca990452dacd17db88fe539caa45c435ee44a5b41eed3f65ba4582aaf6b1ed21`.
+PR #16 adds render timings, reversible quality probes and the owner's selected
+200-metre outdoor presentation cap to merged PR #15/main dffaa93. The required
+local runtime gate and selected owned sun/weather/distance check pass.
+Android export and v2/v3 signature verification pass. GitHub scheduled no checks.
 
 Android 14/API 34, SM6115/Adreno 610, about 3.57 GiB physical memory and 2.5 GiB
 LZ4 zram. Current driver: Qualcomm Vulkan 1.1.295. Older runs used Turnip 1.0.328;
@@ -31,6 +32,8 @@ double vision and exposure adaptation are off. Output conversion/tint/fades and
 the top-right FPS overlay remain. Loading FPS/counters can be stale while work
 blocks drawing. The raw-source LRU is 128 MiB on Android, 512 MiB on desktop;
 it does not account for readers' arrays, decoded objects or graphics resources.
+Outdoor presentation is capped at the owner's selected 200 metres, with matching
+fog ending by 190 metres. This does not shrink gameplay residency.
 
 ## Resource ownership changes
 
@@ -124,17 +127,41 @@ world-state replay or a sustained performance claim. There is no evidence that
 the visual cuts alone deliver a worthwhile active-FPS gain. Restored 960x540 and
 four cascades, then paused outdoors. UI remained 1280x720; save hash unchanged.
 
-Only with the diagnostic FPS overlay, F6 cycles sun shadows 4/2/1/off and F7
-cycles world scale .75/.5/1. XR ignores these diagnostic keys. The optional
+Only with the diagnostic FPS overlay, F6 cycles sun shadows 4/2/1/off, F7 cycles
+world scale .75/.5/1, and F8 cycles 200/100/300/source metres. XR ignores these
+diagnostic keys. The optional
 `--sun-shadows 0|1|2|4` flag selects launch quality; absent it, four is unchanged.
 `--performance-log` alone enables per-viewport timestamp measurements and logs
-them asynchronously every five seconds, including while paused. No live harness,
+them asynchronously every five seconds, including while paused. Code 17 uses
+separate OPENNV_RENDER_COST records so Android does not truncate the existing
+resource counters (the code-16 experiment exposed that logging defect).
+No live harness,
 frame recording, desktop GPU test, driver change or global OS tweak was needed.
 
 A private 15-second simpleperf sample captured 2,069 CPU-cycle samples with none
 lost. About 44% was unresolved, 25% through Godot, 8% Mono, 8% kernel and 5%
 Vulkan; that does not identify a particular managed update owner. No tracing
 services or security settings were changed. Collector/profile processes ended.
+
+Code 17 caps the outdoor camera after LOD attempts to expand it from the initial
+200-metre setting to the owned 125,000 game-unit range (about 1,786 metres).
+Existing weather fog contracts to finish by 190 metres, including shader fog's
+source-unit conversion. Sunlight, source weather state, residency, interaction
+and collision ranges are retained. The owned check proves paused changes,
+invalid-input rejection, restoration to the source range, and owner teardown.
+
+Physical code-17 PID 17478 cold Continue at 18:50:13 passed. Repeated render
+records show camera far=200, scale=.75 and four cascades. Selected camera-range
+round trip: 200 -> 100 -> 300 -> source=1,785.9375 -> 200 metres. At 960x540,
+200 m measured roughly 8–10 FPS / 80 ms main-viewport GPU; 100 m roughly 8–10
+FPS / 70 ms and about 1,500 draw calls; source range roughly 7–10 FPS / 83–85
+ms and about 2,050 draw calls. The live world advanced, so draw-count differences
+are not an identical-state benchmark. No substantial active-FPS gain established.
+Two temporary frames confirmed the same porch view and visible shorter horizon;
+both were inspected/deleted immediately. UI remained 1280x720. All timing/resource
+JSON records parsed completely after the logging fix. Restored 200 m / .75 /
+four cascades, paused outdoors at 18:54:01, and stopped the log collector. Primary
+save SHA-256 remains 9999b8f632ab20fd633da061c2987bbb22ec9d793312f761564afc304210bfef.
 
 ## Verification and next owners
 

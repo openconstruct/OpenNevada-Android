@@ -14,10 +14,22 @@ do not reset the desktop display/GPU or change drivers for comparison.
 
 ## Candidate
 
-APK 0.1.19/code 20 is installed for dialogue acceptance, SHA-256
-`30791b9256d9066b9db862aafdab76b61207840401d9f3083e44ba102b1be56d`.
-The final local runtime gate, selected owned bar greeting audit, Android export
-and v2/v3 signatures pass. Physical dialogue acceptance is pending.
+APK 0.1.20/code 21 is installed, SHA-256
+`89fbcfd0c6c036d048ba02b3763e60bae59221dc0f8d2e062c6b7ccadb714156`.
+The final full local runtime gate, selected owned choice audit, Android export
+and v2/v3 signatures pass. The owner approved install/restart from the latest
+save. PID 28761 loaded that checkpoint in CELL 106185. World-ready was logged at
+22:13:51 local; first substantial draw telemetry followed at 22:14:30, and an
+inspected/deleted frame confirmed visible saloon gameplay near Sunny/Cheyenne.
+This view subsequently measured about 20–23 FPS. No Sunny input or tutorial
+acceptance was performed on code 21; leave the current session running. Pre-install backup:
+work/opennv-pre-v21-save.private.json, SHA-256
+b5f684801cc84f1492ee8e740615abeffa9b7cf8f1349c759a7d19377009799b.
+It matches the post-dialogue save; no save fields were changed. Physical Sunny
+choice/tutorial progression remains pending. The owner requested a budget
+stopping point after install/restart and a thorough external handoff; do not
+start another feature or performance work block automatically.
+
 Prior code-19 result:
 Owned Pip-Boy/source-color/controller audits, Android export and v2/v3 signatures
 pass. The final required full runtime gate and handheld display check pass.
@@ -65,7 +77,7 @@ responses finish, fail or exit; binding another speaker also checks residency
 before touching an old actor. Candidate code 21 passes the final full local gate and selected owned audit;
 Android export and v2/v3 signatures pass. APK 0.1.20/code 21 SHA-256:
 89fbcfd0c6c036d048ba02b3763e60bae59221dc0f8d2e062c6b7ccadb714156.
-Installation/restart approval is pending; code 20 remains running. Native freed/detached actor cleanup and synthetic
+The owner approved installation/restart; code 21 is installed. Native freed/detached actor cleanup and synthetic
 inventory query ownership/invalid run-on/missing-owner checks pass.
 Logs: work/opennv-speech-choices-final-runtime-gate.log,
 work/opennv-speech-lifetime-contract.log and work/opennv-speech-owned.log.
@@ -235,7 +247,7 @@ Prior container gate/audit: work/opennv-container-final-{runtime-gate,owned}.log
 Code-17 report: work/opennv-loot-freeze.private.log
 Code-18 physical test: work/opennv-device-v18.private.log
 
-1. Install code 21 when the owner is ready; test Sunny choices/tutorial handoff, then save and cold Continue. Victor/Pete dialogue and Sunny greeting after reload are accepted on code 20. Then broaden looting coverage: quantity choices, paging, Take All and
+1. Finish the owner test of Sunny choices/tutorial handoff on installed code 21, then save and cold Continue. Victor/Pete dialogue and Sunny greeting after reload are accepted on code 20. Then broaden looting coverage: quantity choices, paging, Take All and
    other containers. Basic selection/transfer/close is physically accepted.
 2. Attribute active CPU update cost, remove repeated unchanged work, and profile
    mesh/material batching plus shader/terrain cost. Sustained 30 FPS is unachieved.

@@ -49,6 +49,13 @@ Read-only backup: work/opennv-bar-report-save.private.json, SHA-256
 f8169b566ac9e8f8ceeeac87f5a9a183ef999d2cf58b278358ebb791b567ca9d. The owner approved installing code 20 and restarting from this checkpoint.
 The pre-install copy work/opennv-pre-v20-save.private.json has the same hash.
 No save fields were edited. The previous build could not capture newer changes.
+Code-20 PID 27444 cold Continue first drew the exterior at 21:23:27, about 140
+seconds after Continue; steady play at this outdoor view was about 10 FPS.
+Ordinary F5 saved successfully at 21:24:55, schema v22. Backup:
+work/opennv-v20-loaded-save.private.json, SHA-256
+4dd0a2d9da576a68381b28eda25ec7c831b03d3846638031603ca4d9fabc070a.
+The owner has been asked to retry dialogue/choices and save afterward. That
+physical test has not been reported yet; do not claim spoken dialogue is accepted.
 
 Candidate code 20 adds player-owned fame/infamy, winning REPU scales and source
 GMST thresholds, CTDA/raw/percentage/rank queries and reached script mutations.
@@ -70,8 +77,8 @@ process time. The UI stayed 1280x720. The original .75 scale was restored after
 the probe, then the owner chose .5/640x360 for the next build. Default draw range
 200 m/four cascades and post-effect choices remain. No 30 FPS result is claimed.
 
-Source for subsequent work: /home/jerr/open-nv (owner-requested relocation at
-this block's clean stopping point). Toolchains/logs remain under
+Source is now /home/jerr/open-nv, relocated at the owner's requested clean
+stopping point. A fresh Debug restore/build at the new path passes. Toolchains/logs remain under
 /home/jerr/Documents/Codex/2026-10-22/i/work. Owned game data stays in place.
 Never overlap Android export with desktop builds or move a checkout during a build.
 
@@ -195,6 +202,8 @@ profile collectors stopped; any current collector must be stopped after testing.
 
 Latest gate: work/opennv-bar-final-runtime-gate.log (PASS)
 Bar selection audit: work/opennv-bar-final-owned.log
+Relocated build: work/opennv-relocated-build.log (PASS)
+Device code-20 log: work/opennv-device-v20.private.log
 Synthetic detail: work/opennv-bar-synthetic.log / opennv-bar-save-contract.log
 Prior Pip-Boy gate: work/opennv-pipboy-final-runtime-gate.log (PASS)
 Selected audit: work/opennv-pipboy-final-owned.log
@@ -205,7 +214,7 @@ Prior container gate/audit: work/opennv-container-final-{runtime-gate,owned}.log
 Code-17 report: work/opennv-loot-freeze.private.log
 Code-18 physical test: work/opennv-device-v18.private.log
 
-1. Broaden physical looting coverage: quantity choices, paging, Take All and
+1. Finish the pending physical bar dialogue/choices/save check, then broaden looting coverage: quantity choices, paging, Take All and
    other containers. Basic selection/transfer/close is physically accepted.
 2. Attribute active CPU update cost, remove repeated unchanged work, and profile
    mesh/material batching plus shader/terrain cost. Sustained 30 FPS is unachieved.

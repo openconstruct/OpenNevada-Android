@@ -4,9 +4,10 @@ Creature package selection follows winning PKID priority and source conditions.
 Follow and Dialogue declarations may omit PLDT; requiring a start location for
 every package incorrectly rejected ordinary companion packages. The admitted
 Follow procedure reads its target and distance from PTDT. Creature Dialogue can
-approach its target and request the shared conversation owner. Reached start/end
-locations, other procedures, unsupported conditions and event effects remain
-explicit failures.
+approach its target and request the shared conversation owner. Package conditions
+route GetDeadCount through retained corpse and lethal-transition state. Reached
+start/end locations, other procedures (including source Accompany), unsupported
+conditions and event effects remain explicit failures.
 
 Native movement shares the actor's source BBX envelope, KF root displacement,
 turn/speed configuration, source navigation and Godot collision solver with

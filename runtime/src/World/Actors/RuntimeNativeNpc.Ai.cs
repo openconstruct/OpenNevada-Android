@@ -1,4 +1,3 @@
-using System.Buffers.Binary;
 using Godot;
 using OpenNV.Runtime.Content;
 using OpenNV.Runtime.Formats.Gamebryo;
@@ -103,6 +102,10 @@ internal partial class RuntimeNativeNpc
         {
             source = _dialoguePackage,
             requested = _dialoguePackageRequested,
+            waitReached = _dialogueWaitReached,
+            trigger = _dialogueTriggerReference?.FormKey.ToString(),
+            triggerRadius = _dialogueTriggerRadius,
+            triggered = _dialogueTriggered,
             unbound = new[] { "package-camera-zoom", "package-head-target-priority", "pre-conversation-target-movement" }
         },
         idleCollection = _packageIdleSource is null ? null : new
@@ -249,6 +252,8 @@ internal partial class RuntimeNativeNpc
                 _travelActive = false;
                 ClearFurniture();
                 _dialoguePackage = null; _dialoguePackageRequested = false;
+                _dialogueWaitReached = false; _dialogueTriggered = false;
+                _dialogueTriggerReference = null; _dialogueTriggerPrimitive = null; _dialogueTriggerRadius = 0;
                 _patrol = null; _patrolProgress = null;
             }
             if (selected is null) return;
@@ -258,19 +263,19 @@ internal partial class RuntimeNativeNpc
             if (_packageIdleSource.Procedure == 13) { BeginPatrol(selected); return; }
             var fields = selected.ReadSubrecords().ToArray();
             var data = fields.Single(field => field.Signature == "PKDT").Data;
-            var location = fields.Single(field => field.Signature == "PLDT").Data;
-            if (data.Length != 12 || location.Length != 12) throw new InvalidDataException("AI package has an invalid field extent.");
-            if (data.Span[4] is not (6 or 15) || BinaryPrimitives.ReadInt32LittleEndian(location.Span) != 0 ||
-                BinaryPrimitives.ReadInt32LittleEndian(location.Span[8..]) != 0)
-                throw new NotSupportedException($"PACK {selected.FormKey} requires its travel/procedure owner.");
-            var target = selected.Plugin.AdjustFormId(BinaryPrimitives.ReadUInt32LittleEndian(location.Span[4..]));
-            var reference = _aiCell!.References.SingleOrDefault(value => value.FormKey == target) ??
-                throw new NotSupportedException($"PACK {selected.FormKey} target {target} is outside the active cell.");
+            if (data.Length != 12) throw new InvalidDataException("AI package has an invalid field extent.");
             if (data.Span[4] == 15)
             {
-                BeginDialoguePackage(selected, reference);
+                BeginDialoguePackage(selected);
                 return;
             }
+            var location = FalloutPackageLocation.Read(selected, "PLDT") ??
+                throw new InvalidDataException("Travel package has no source location.");
+            if (data.Span[4] != 6 || location.Type != FalloutPackageLocation.NearReference ||
+                location.Radius != 0 || location.Reference is not { } target)
+                throw new NotSupportedException($"PACK {selected.FormKey} requires its travel/procedure owner.");
+            var reference = _aiCell!.References.SingleOrDefault(value => value.FormKey == target) ??
+                throw new NotSupportedException($"PACK {selected.FormKey} target {target} is outside the active cell.");
             var furniture = _aiStack.GetEffective(reference.Base);
             if (furniture.Signature != "FURN")
             {
@@ -297,6 +302,8 @@ internal partial class RuntimeNativeNpc
         25 => _travelActive || Combat?.PackageMoving == true ? 1 : 0,
         58 or 59 or 79 or 546 => _questState!.Evaluate(condition),
         63 => Activity.Attacked ? 1 : 0,
+        84 => (_aiWorld ?? throw new NotSupportedException("AI dead-count query has no world owner."))
+            .DeadCount(condition.FormArgument1),
         69 => Appearance.Race == condition.FormArgument1 ? 1 : 0,
         70 => (Appearance.Female ? 1u : 0u) == condition.Argument1 ? 1 : 0,
         71 => (_liveFactions?.Invoke() ?? _factions).GetValueOrDefault(condition.FormArgument1, (sbyte)-1) >= 0 ? 1 : 0,

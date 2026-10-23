@@ -98,8 +98,9 @@ internal sealed class FalloutScriptValueStore
     private FalloutSoundRandomState? _random;
 
     // Shared reference/quest/result stream; its sequence is not retail parity.
-    internal uint RandomPercent() => (_random ??= new(BitConverter.ToUInt64(
-        System.Security.Cryptography.RandomNumberGenerator.GetBytes(sizeof(ulong))))).NextBounded(100);
+    internal uint RandomPercent() => (uint)RandomIndex(100);
+    internal int RandomIndex(int count) => count > 0 ? (int)(_random ??= new(BitConverter.ToUInt64(
+        System.Security.Cryptography.RandomNumberGenerator.GetBytes(sizeof(ulong))))).NextBounded((uint)count) : throw new ArgumentOutOfRangeException(nameof(count));
 
     internal FalloutScriptValue Read(FalloutScriptLocalKind kind, double raw)
     {

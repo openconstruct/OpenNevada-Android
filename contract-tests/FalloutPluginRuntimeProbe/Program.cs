@@ -1329,12 +1329,20 @@ try
         "Saving a restored legacy player must upgrade its anchor without applying the offset twice.");
     FalloutNativeCampaignSave.Write(syntheticSavePath, syntheticCampaignState);
     var validSaveBytes = File.ReadAllBytes(syntheticSavePath);
-    var referenceSave = syntheticCampaignState with { Schema = FalloutNativeCampaignSave.ExpectedSchema, References = [], EncounterZones = [] };
+    var referenceSave = syntheticCampaignState with { Schema = FalloutNativeCampaignSave.ExpectedSchema, References = [], EncounterZones = [], Reputations = [] };
     FalloutNativeCampaignSave.Write(syntheticSavePath, referenceSave);
     var referenceRestore = FalloutNativeCampaignSave.Read(syntheticSavePath, syntheticSaveCompatibilityId,
         cellStack, syntheticVigor, syntheticTagSkills, syntheticOpeningGrant, syntheticTraitFarewell);
     Require(referenceRestore.State.Schema == FalloutNativeCampaignSave.ExpectedSchema && referenceRestore.State.References?.Count == 0,
         "Campaign save lost its explicit reference state owner.");
+    ExpectFailure(() => FalloutNativeCampaignSave.Write(syntheticSavePath, referenceSave with { Reputations = null }), "Reputation counters");
+    FalloutNativeCampaignSave.Write(syntheticSavePath, referenceSave with { Schema = FalloutNativeCampaignSave.ExplosionSchema, Reputations = null });
+    var legacyReputation = FalloutNativeCampaignSave.Read(syntheticSavePath, syntheticSaveCompatibilityId,
+        cellStack, syntheticVigor, syntheticTagSkills, syntheticOpeningGrant, syntheticTraitFarewell);
+    var upgradedReputation = FalloutNativeCampaignSave.WithWorldState(legacyReputation.State, referenceSave.ActiveCell,
+        referenceSave.PlayerPosition, referenceSave.PlayerRotation);
+    Require(upgradedReputation.Schema == FalloutNativeCampaignSave.ExpectedSchema && upgradedReputation.Reputations is { Count: 0 },
+        "The previous save did not acquire its initial reputation owner through ordinary migration.");
     FalloutNativeCampaignSave.Write(syntheticSavePath, referenceSave with { Schema = FalloutNativeCampaignSave.DeathEventSchema });
     var legacyDeath = FalloutNativeCampaignSave.Read(syntheticSavePath, syntheticSaveCompatibilityId,
         cellStack, syntheticVigor, syntheticTagSkills, syntheticOpeningGrant, syntheticTraitFarewell);

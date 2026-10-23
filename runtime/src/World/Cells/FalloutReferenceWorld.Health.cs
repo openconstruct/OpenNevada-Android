@@ -44,6 +44,24 @@ internal sealed partial class FalloutReferenceWorld
         return health;
     }
 
+    internal int DeadCount(FalloutFormKey actorBase)
+    {
+        if (records.GetEffective(actorBase).Signature is not ("NPC_" or "CREA"))
+            throw new InvalidDataException("GetDeadCount requires an actor base, not a placed reference.");
+        // Lethal transitions remain in reference state across eviction/deletion.
+        // Authored corpses have no killer and did not undergo a runtime kill.
+        // Resurrection/respawn remain unsupported, so a recorded kill cannot
+        // disappear or be counted twice through a later health reset.
+        return _instances.Values.Count(instance => instance.Base == actorBase &&
+            instance.Injury is { Dead: true, Killer: not null });
+    }
+
+    internal float QueryDead(FalloutFormKey reference)
+    {
+        InitializeSourceCorpse(reference);
+        return IsDead(reference) ? 1 : 0;
+    }
+
     internal bool IsDead(FalloutFormKey reference) => Actor(reference).Injury?.Dead == true;
 
     internal void InitializeSourceCorpse(FalloutFormKey reference)

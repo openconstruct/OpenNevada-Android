@@ -11,6 +11,12 @@ if (args is ["--opening-clock", var openingRoot])
     return;
 }
 
+if (args is ["--bar-dialogue", var barRoot, var barSave])
+{
+    OwnedBarDialogueProbe.Run(barRoot, barSave);
+    return;
+}
+
 var directory = Path.Combine(Path.GetTempPath(), "opennv-reference-contract-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(directory);
 try

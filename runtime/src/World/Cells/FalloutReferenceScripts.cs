@@ -21,7 +21,7 @@ internal sealed record FalloutReferenceScriptHost(Func<FalloutFormKey, FalloutFo
     Func<FalloutFormKey, bool>? IsInCombat = null,
     Func<FalloutFormKey, FalloutFormKey, bool>? IsInSameCell = null, FalloutScriptEvents? Events = null,
     Func<FalloutFormKey, FalloutFormKey, float>? Distance = null,
-    Func<FalloutFormKey, bool>? IsInInterior = null);
+    Func<FalloutFormKey, bool>? IsInInterior = null, FalloutReputationState? Reputation = null);
 internal sealed record FalloutReferenceScriptEventResult(FalloutFormKey Reference, string Event, int Blocks, string? Error,
     string? RecoveredError = null);
 internal sealed record FalloutReferenceScriptEvent(string Name, FalloutFormKey? ActionReference = null,
@@ -281,6 +281,9 @@ internal sealed partial class FalloutReferenceScripts(FalloutPluginStack records
         }
         FalloutScriptFunction? Function(string name)
         {
+            if (host.Reputation?.Function(name, bindings) is { } reputationFunction) return reputationFunction;
+            if (name.Equals("GetDeadCount", StringComparison.OrdinalIgnoreCase))
+                return new([FalloutScriptArgumentKind.Identifier], arguments => world.DeadCount(bindings.Form(arguments[0].Identifier!).FormKey)) { ReadOnly = true };
             var parts = name.Split('.');
             var operation = parts[^1].ToLowerInvariant();
             FalloutFormKey Target() => parts.Length == 1 ? source : Reference(parts[0]);
@@ -464,6 +467,12 @@ internal sealed partial class FalloutReferenceScripts(FalloutPluginStack records
                 return;
             }
             arguments = FalloutGameModeProgram.ResolveCommandArguments(arguments, values, Function, UserFunction);
+            if (parts.Length == 1 && operation is "setreputation" or "addreputation" or "removereputation")
+            {
+                (host.Reputation ?? throw new NotSupportedException("Reputation commands have no player state owner."))
+                    .Command(operation, arguments, bindings);
+                return;
+            }
             var callerPlugin = bindings.Source.OwnerPlugin;
             if (parts.Length <= 2 && operation is "setinifloat" or "setinistring")
             {

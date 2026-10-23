@@ -13,6 +13,10 @@ internal static class ConversationContracts
         {
             var header = new byte[12]; BinaryPrimitives.WriteSingleLittleEndian(header, 1.34f);
             var data = Join(Record("TES4", 0, Field("HEDR", header)),
+                Record("REPU", 0xb00, Field("EDID", Text("TestReputation")), Field("DATA", BitConverter.GetBytes(100f))),
+                Record("GMST", 0xb01, Field("EDID", Text("fReputationThresholdOne")), Field("DATA", BitConverter.GetBytes(.15f))),
+                Record("GMST", 0xb02, Field("EDID", Text("fReputationThresholdTwo")), Field("DATA", BitConverter.GetBytes(.5f))),
+                Record("GMST", 0xb03, Field("EDID", Text("fReputationThresholdThree")), Field("DATA", BitConverter.GetBytes(1f))),
                 Record("QUST", 0x700, Field("DATA", [1, 10])), Record("QUST", 0x701, Field("DATA", [0, 90])),
                 Topic(0x800, "Greeting",
                     Info(0x910, 0x700, 4, 2, Field("TCFU", U32(0x920)), Field("TCFU", U32(0x921)), Field("TCFU", U32(0x922))),
@@ -38,9 +42,13 @@ internal static class ConversationContracts
                 Record("DIAL", 0x80f, Field("DATA", [1])),
                 Topic(0x810, "GOODBYE", 2, 5, [InfoOfType(1, 0x995, 0x700, 0, 1, Condition(72, 0x999, 1)),
                     InfoOfType(1, 0x996, 0x700, 0, 1)], type: 1),
+                Topic(0x812, "Random pool",
+                    Info(0xa10, 0x700, 2, 1), Info(0xa11, 0x700, 0, 1),
+                    Info(0xa12, 0x700, 34, 1, Condition(72, 0x900, 1)), Info(0xa13, 0x700, 34, 1)),
                 Topic(0x811, "Explicit order", Info(0x997, 0x700, 0, 1, Field("TCLT", U32(0x80a)), Field("TCLT", U32(0x80b)))));
             File.WriteAllBytes(file, data);
             using var records = FalloutPluginStack.Load(directory, ["Dialogue.esm"]);
+            ReputationContracts.Run(records);
             var quests = new FalloutQuestState(records);
             Require(FalloutDialogueTopic.Priority(records, Key(0x80f)) == 50 && !FalloutDialogueTopic.DefaultTopics(records).Contains(Key(0x80f)),
                 "Legacy one-byte DIAL metadata did not retain its default priority/non-top-level state.");
@@ -96,6 +104,21 @@ internal static class ConversationContracts
             var linked = Create(); linked.Start(Key(0x900), Key(0x811)); linked.CompleteResponse();
             Require(linked.Choices.Select(choice => choice.Topic).SequenceEqual([Key(0x80a), Key(0x80b)]),
                 "Topic priority reordered the source's explicit TCLT links.");
+            var poolCount = 0;
+            var random = new FalloutConversation(records, quests, Unknown, (_, _) => { }, randomIndex: count => { poolCount = count; return count - 1; });
+            random.Start(Key(0x900), Key(0x812));
+            Require(poolCount == 2 && random.Info!.Record.FormKey == Key(0xa12), "Random pool lost eligible membership, source boundary or non-random exclusion.");
+            var filteredRandom = new FalloutConversation(records, quests, Unknown, (_, _) => { }, randomIndex: count => { poolCount = count; return 0; });
+            filteredRandom.Start(Key(0x999), Key(0x812));
+            Require(poolCount == 1 && filteredRandom.Info!.Record.FormKey == Key(0xa10), "Ineligible Random End escaped its source group.");
+            Reject(() => Create().Start(Key(0x900), Key(0x812)));
+            var invalidRandom = new FalloutConversation(records, quests, Unknown, (_, _) => { }, randomIndex: _ => -1);
+            Reject(() => invalidRandom.Start(Key(0x900), Key(0x812)));
+            var values = new FalloutScriptValueStore(); _ = values.RandomIndex(2);
+            var beforeRandom = values.Capture(); var sequence = Enumerable.Range(0, 30).Select(_ => values.RandomIndex(7)).ToArray();
+            var coldRandom = new FalloutScriptValueStore(); coldRandom.Restore(beforeRandom);
+            Require(sequence.SequenceEqual(Enumerable.Range(0, 30).Select(_ => coldRandom.RandomIndex(7))), "Cold dialogue selection lost the saved random stream.");
+            Console.WriteLine("OPENNV_RANDOM_DIALOGUE_PASS pool=true sourceBoundary=true filteredEnd=true invalid=true cold=true");
             var executed = 0;
             var failed = Create((_, _) => { executed++; throw new NotSupportedException("Unbound result effect."); });
             Reject(() => failed.Start(Key(0x900), Key(0x800)));

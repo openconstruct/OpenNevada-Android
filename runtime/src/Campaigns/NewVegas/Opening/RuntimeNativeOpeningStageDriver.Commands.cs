@@ -199,7 +199,8 @@ internal partial class RuntimeNativeOpeningStageDriver
             Ingestibles = _ingestibles.Capture(),
             ActorOverrides = _scripts.References!.CaptureActorOverrides(),
             EncounterZones = _scripts.References.CaptureEncounterZones(),
-            ExplosionExposure = _player.CaptureExplosionExposure()
+            ExplosionExposure = _player.CaptureExplosionExposure(),
+            Reputations = _reputation.Capture()
         };
     }
 

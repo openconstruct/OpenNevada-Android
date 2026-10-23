@@ -14,8 +14,11 @@ do not reset the desktop display/GPU or change drivers for comparison.
 
 ## Candidate
 
-APK 0.1.18/code 19 is installed for acceptance, SHA-256
-`361fad88b25769fffdc08bbb755b6b85f8c12ad88d79508dfe220c9c7a610e7f`.
+APK 0.1.19/code 20 is installed for dialogue acceptance, SHA-256
+`30791b9256d9066b9db862aafdab76b61207840401d9f3083e44ba102b1be56d`.
+The final local runtime gate, selected owned bar greeting audit, Android export
+and v2/v3 signatures pass. Physical dialogue acceptance is pending.
+Prior code-19 result:
 Owned Pip-Boy/source-color/controller audits, Android export and v2/v3 signatures
 pass. The final required full runtime gate and handheld display check pass.
 The owner confirmed physical Pip-Boy page/tab/row navigation, A activation
@@ -27,11 +30,57 @@ Android 14/API 34, SM6115/Adreno 610, about 3.57 GiB physical RAM and 2.5 GiB LZ
 zram. Qualcomm Vulkan 1.1.295 is current; earlier runs used Turnip 1.0.328. No
 driver change was made. ADB port 5038 currently owns USB, serial MQ65172511055656.
 
-World 960x540, UI/output 1280x720, managed Android optimization, source uGrids=5.
+World 640x360 (owner-selected after the bar probe), UI/output 1280x720,
+managed Android optimization, source uGrids=5.
 Bloom/blur/double/adaptive exposure off; output conversion/tint/fades remain.
 Outdoor draw cap is the owner's selected 200 metres, with matching fog ending
 by 190 metres. Gameplay residency/collisions remain intact. Raw-source LRU is
 128 MiB on Android / 512 MiB desktop and counts retained payloads only.
+
+## Current bar dialogue and FPS report
+
+The owner entered the saloon but the settler (104f03), Easy Pete (104c80) and
+Sunny Smiles (104e85) did not converse. Code-19 PID 22188 first failed on QUST
+13ec0d (vDialogueSloanGeneric), GetReputationThreshold 575. The fault then latched
+the single conversation owner, blocked later requests and made CaptureCurrentState
+reject saves/door autosaves as an active conversation. F5 at 21:08 confirmed the
+same failure. Latest successful save was 20:59:03 in CELL 0e1aa7, stage VCG01:200.
+Read-only backup: work/opennv-bar-report-save.private.json, SHA-256
+f8169b566ac9e8f8ceeeac87f5a9a183ef999d2cf58b278358ebb791b567ca9d. The owner approved installing code 20 and restarting from this checkpoint.
+The pre-install copy work/opennv-pre-v20-save.private.json has the same hash.
+No save fields were edited. The previous build could not capture newer changes.
+Code-20 PID 27444 cold Continue first drew the exterior at 21:23:27, about 140
+seconds after Continue; steady play at this outdoor view was about 10 FPS.
+Ordinary F5 saved successfully at 21:24:55, schema v22. Backup:
+work/opennv-v20-loaded-save.private.json, SHA-256
+4dd0a2d9da576a68381b28eda25ec7c831b03d3846638031603ca4d9fabc070a.
+The owner has been asked to retry dialogue/choices and save afterward. That
+physical test has not been reported yet; do not claim spoken dialogue is accepted.
+
+Candidate code 20 adds player-owned fame/infamy, winning REPU scales and source
+GMST thresholds, CTDA/raw/percentage/rank queries and reached script mutations.
+Save v22 retains counters; v21 migrates from the previously unsupported initial
+reputation lifetime. Random greeting pools use the saved shared script random
+stream and authored Random End boundaries. New explicit conversation requests can
+replace the failed transition owner while retaining world/results/said history;
+a fault is no longer considered an active continuation for saving. GetDead and
+GetDeadCount consume retained source-corpse and lethal-transition state. Resurrection
+and respawn remain unsupported. Owned greeting selection succeeds for all three
+reported speakers; this audit does not execute their result scripts or voices.
+Synthetic contracts and selected owned greeting selection pass. The final full
+local runtime gate passes. Export and signatures pass; physical dialogue acceptance is pending. See
+[reputation and greeting ownership](reputation-and-greetings.md).
+
+At the same bar view, code 19 measured about 13 FPS / 71 ms main GPU at 960x540.
+A bounded 640x360 probe reached about 20 FPS / 40 ms GPU, still about 52–55 ms
+process time. The UI stayed 1280x720. The original .75 scale was restored after
+the probe, then the owner chose .5/640x360 for the next build. Default draw range
+200 m/four cascades and post-effect choices remain. No 30 FPS result is claimed.
+
+Source is now /home/jerr/open-nv, relocated at the owner's requested clean
+stopping point. A fresh Debug restore/build at the new path passes. Toolchains/logs remain under
+/home/jerr/Documents/Codex/2026-10-22/i/work. Owned game data stays in place.
+Never overlap Android export with desktop builds or move a checkout during a build.
 
 ## Pip-Boy display and input fault
 
@@ -151,7 +200,12 @@ profile collectors stopped; any current collector must be stopped after testing.
 
 ## Verification and next owners
 
-Latest gate: work/opennv-pipboy-final-runtime-gate.log (PASS)
+Latest gate: work/opennv-bar-final-runtime-gate.log (PASS)
+Bar selection audit: work/opennv-bar-final-owned.log
+Relocated build: work/opennv-relocated-build.log (PASS)
+Device code-20 log: work/opennv-device-v20.private.log
+Synthetic detail: work/opennv-bar-synthetic.log / opennv-bar-save-contract.log
+Prior Pip-Boy gate: work/opennv-pipboy-final-runtime-gate.log (PASS)
 Selected audit: work/opennv-pipboy-final-owned.log
 Source-color audit: work/opennv-pipboy-settings-owned.log
 Handheld display log: work/opennv-device-v19.private.log
@@ -160,7 +214,7 @@ Prior container gate/audit: work/opennv-container-final-{runtime-gate,owned}.log
 Code-17 report: work/opennv-loot-freeze.private.log
 Code-18 physical test: work/opennv-device-v18.private.log
 
-1. Broaden physical looting coverage: quantity choices, paging, Take All and
+1. Finish the pending physical bar dialogue/choices/save check, then broaden looting coverage: quantity choices, paging, Take All and
    other containers. Basic selection/transfer/close is physically accepted.
 2. Attribute active CPU update cost, remove repeated unchanged work, and profile
    mesh/material batching plus shader/terrain cost. Sustained 30 FPS is unachieved.

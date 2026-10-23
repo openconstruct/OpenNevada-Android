@@ -106,20 +106,29 @@ internal sealed partial class FalloutDialogueTopic
     internal FalloutDialogueInfo? Select(FalloutFormKey speakerBase, IReadOnlySet<FalloutFormKey> said,
         Func<FalloutFormKey, float> questStage, Func<FalloutCondition, float>? context = null,
         Func<FalloutFormKey, bool>? questEligible = null, Func<FalloutFormKey, int>? questPriority = null,
-        bool conversation = false)
+        bool conversation = false, Func<int, int>? randomIndex = null)
     {
         IEnumerable<FalloutDialogueInfo> candidates = questPriority is null ? Infos : Infos.OrderByDescending(info => questPriority(info.Quest));
+        var pool = new List<FalloutDialogueInfo>();
+        FalloutDialogueInfo Pick()
+        {
+            var index = (randomIndex ?? throw new NotSupportedException("Random dialogue has no persistent random owner."))(pool.Count);
+            return index >= 0 && index < pool.Count ? pool[index] : throw new InvalidDataException("Dialogue random index is outside its pool.");
+        }
         foreach (var info in candidates)
         {
-            if (!Eligible(info, speakerBase, said, questStage, context, questEligible)) continue;
-            // SayTo owns one complete INFO and finishes after its responses and
-            // end script. Goodbye requires no further conversational turn here;
-            // it must not suppress the authored line. Random and other routing
-            // flags still require their own selection owners.
-            RequireFlags(info, conversation);
-            return info;
+            if (pool.Count != 0 && pool[0].Quest != info.Quest) return Pick();
+            if (Eligible(info, speakerBase, said, questStage, context, questEligible))
+            {
+                RequireFlags(info, conversation, allowRandom: true);
+                if ((info.Flags & 2) != 0) pool.Add(info);
+                else if (pool.Count == 0) return info;
+            }
+            // Non-random records can occur inside an authored random group.
+            // They do not join its pool; Random End closes the group.
+            if (pool.Count != 0 && (info.Flags & 32) != 0) return Pick();
         }
-        return null;
+        return pool.Count == 0 ? null : Pick();
     }
 
     internal static IReadOnlyList<FalloutSayToCommand> SayToCommands(string script)
@@ -246,10 +255,10 @@ internal sealed partial class FalloutDialogueTopic
                 $"INFO {info.Record.FormKey} condition {condition.Function} RunOn {condition.RunOn} is unbound.");
         }, evaluateRunOn: true);
 
-    internal static void RequireFlags(FalloutDialogueInfo info, bool conversation)
+    internal static void RequireFlags(FalloutDialogueInfo info, bool conversation, bool allowRandom = false)
     {
-        if (info.Type != (conversation ? 0 : 1) || info.NextSpeaker != 0 || (info.Flags & ~5) != 0 || info.Flags2 != 0)
-            throw new NotSupportedException($"INFO {info.Record.FormKey} needs its conversation/random/flag owner.");
+        if (info.Type != (conversation ? 0 : 1) || info.NextSpeaker != 0 || (info.Flags & ~(allowRandom ? 39 : 5)) != 0 || info.Flags2 != 0)
+            throw new NotSupportedException($"INFO {info.Record.FormKey} needs its conversation/random/flag owner (type={info.Type} next={info.NextSpeaker} flags={info.Flags:x2}/{info.Flags2:x2}).");
     }
 
     internal static bool Eligible(FalloutDialogueInfo info, FalloutFormKey speaker, IReadOnlySet<FalloutFormKey> said,

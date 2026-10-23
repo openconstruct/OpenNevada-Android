@@ -143,6 +143,8 @@ internal static class ActorDamageContracts
                 "Death event ignored its delay or was not retained in world state.");
             var player = new FalloutPlayerInventory();
             world.Inventory(Key(0x91), 1).Contents.TransferTo(player, Key(3), 1);
+            Check(world.DeadCount(Key(1)) == 1, "Lethal transition did not enter its base death count.");
+            Reject(() => world.DeadCount(Key(0x91)));
             var saved = JsonSerializer.Deserialize<FalloutReferenceSnapshot[]>(JsonSerializer.Serialize(world.Capture()))!;
             world.SeverLimb(Key(0x91), 1); world.SeverLimb(Key(0x91), 1);
             Check(world.Get(Key(0x91)).Injury!.SeveredParts!.SequenceEqual(new byte[] { 1 }), "Severed source limb duplicated.");
@@ -154,6 +156,7 @@ internal static class ActorDamageContracts
             Reject(() => invalidSever.Restore(saved.Select(value => value.Reference == Key(0x92) ?
                 value with { Injury = value.Injury! with { SeveredParts = [1] } } : value).ToArray()));
             using var cold = new FalloutReferenceWorld(records); cold.Restore(saved); cold.LoadCell(cell);
+            Check(cold.DeadCount(Key(1)) == 1, "Cold reference state lost the death count.");
             Check(cold.Get(Key(0x91)).Injury is { DeathEventPending: true, DeathEventElapsed: .75 } &&
                 !cold.AdvanceDeathEvent(Key(0x91), 1, 2, false) && !cold.AdvanceDeathEvent(Key(0x91), .25, 2, true) &&
                 cold.AdvanceDeathEvent(Key(0x91), 0, 2, false) && !cold.AdvanceDeathEvent(Key(0x91), 10, 2, false),

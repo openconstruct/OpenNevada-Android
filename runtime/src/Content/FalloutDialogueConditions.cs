@@ -6,7 +6,8 @@ internal sealed class FalloutDialogueConditions(FalloutPluginStack records, Fall
     Func<FalloutFormKey, float>? healthPercentage = null,
     Func<FalloutFormKey, int, float>? actorValue = null,
     Func<FalloutFormKey, bool>? talkedToPlayer = null,
-    Func<FalloutFormKey, IReadOnlyDictionary<FalloutFormKey, sbyte>>? factions = null)
+    Func<FalloutFormKey, IReadOnlyDictionary<FalloutFormKey, sbyte>>? factions = null,
+    Func<FalloutFormKey, bool>? isDead = null)
 {
     internal FalloutDialogueConditions(FalloutPluginStack records, FalloutQuestState quests, FalloutFormKey speaker,
         FalloutNpcAppearance appearance, Func<FalloutCondition, float>? runtime = null)
@@ -17,7 +18,7 @@ internal sealed class FalloutDialogueConditions(FalloutPluginStack records, Fall
     internal float Evaluate(FalloutCondition condition)
     {
         if ((condition.Function == 431 && healthPercentage is not null) ||
-            (condition.Function == 14 && actorValue is not null))
+            (condition.Function == 14 && actorValue is not null) || (condition.Function == 46 && isDead is not null))
         {
             var actor = condition.RunOn switch
             {
@@ -27,7 +28,8 @@ internal sealed class FalloutDialogueConditions(FalloutPluginStack records, Fall
                     ?? throw new InvalidDataException("Dialogue actor query has no explicit reference."),
                 _ => throw new NotSupportedException($"Dialogue actor query run-on {condition.RunOn} is unbound."),
             };
-            return condition.Function == 431 ? healthPercentage!(actor) : actorValue!(actor, checked((int)condition.Argument1));
+            return condition.Function == 431 ? healthPercentage!(actor) : condition.Function == 46 ? isDead!(actor) ? 1 : 0 :
+                actorValue!(actor, checked((int)condition.Argument1));
         }
         // These functions query the explicit QUST argument. Selecting the
         // speaker, listener or another reference does not change that owner.

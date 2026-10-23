@@ -8,7 +8,8 @@ namespace OpenNV.Runtime.World.Actors;
 internal partial class RuntimeNativeConversation : Node
 {
     private FalloutConversation _conversation = null!;
-    internal bool Active => _pending.Count != 0 || _conversation.Phase != "closed";
+    private Func<FalloutConversation> _createConversation = null!;
+    internal bool Active => Error is null && (_pending.Count != 0 || _conversation.Phase != "closed");
     private RuntimeNativeSpeech _speech = null!;
     private RuntimeNativePlayer _player = null!;
     private FalloutPluginStack _records = null!;
@@ -20,6 +21,7 @@ internal partial class RuntimeNativeConversation : Node
     private Func<FalloutFormKey, FalloutCondition, FalloutFormKey?>? _resolveRunOnCell;
     private Func<FalloutFormKey, float>? _healthPercentage;
     private Func<FalloutFormKey, int, float>? _actorValue;
+    private Func<FalloutFormKey, bool>? _isDead;
     private Func<FalloutFormKey, FalloutActorTemplateSelection?>? _templates;
     private Action<FalloutFormKey>? _recordTalkedToPlayer;
     private Func<FalloutFormKey, bool>? _talkedToPlayer;
@@ -49,23 +51,31 @@ internal partial class RuntimeNativeConversation : Node
         Func<FalloutFormKey, FalloutActorTemplateSelection?>? templates = null,
         Action<FalloutFormKey>? recordTalkedToPlayer = null,
         Func<FalloutFormKey, bool>? talkedToPlayer = null,
-        Func<FalloutFormKey, IReadOnlyDictionary<FalloutFormKey, sbyte>>? factions = null)
+        Func<FalloutFormKey, IReadOnlyDictionary<FalloutFormKey, sbyte>>? factions = null, Func<int, int>? randomIndex = null, Func<FalloutFormKey, bool>? isDead = null)
     {
         _records = records; _quests = quests; _player = player; _speech = speech; _runtimeConditions = evaluate;
         _resolveRunOnCell = resolveRunOnCell;
         _healthPercentage = healthPercentage;
-        _actorValue = actorValue;
+        _actorValue = actorValue; _isDead = isDead;
         _templates = templates;
         _recordTalkedToPlayer = recordTalkedToPlayer;
         _talkedToPlayer = talkedToPlayer;
         _factions = factions;
-        _conversation = new(records, quests, condition => _conditions!.Evaluate(condition), (info, begin) => results(info, _speaker, begin), saidInfos);
+        _createConversation = () => new(records, quests, condition => _conditions!.Evaluate(condition), (info, begin) => results(info, _speaker, begin), saidInfos, randomIndex);
+        _conversation = _createConversation();
     }
 
     internal void Request(FalloutFormKey speaker, FalloutFormKey target, FalloutFormKey? topic, Action? completed = null)
     {
         if (_records.RuntimeFormId(target) != 0x14) throw new NotSupportedException("NPC-to-NPC conversation travel is unbound.");
-        if (Error is not null) throw new InvalidOperationException(Error);
+        if (Error is not null)
+        {
+            if (_speech.Active || _speech.Error is not null) throw new InvalidOperationException(Error);
+            // A new explicit request starts a fresh transition owner. Executed
+            // gameplay/results and said-once history remain with their owners.
+            GD.Print($"OPENNV_NATIVE_CONVERSATION_RETRY previous={Error}");
+            _conversation = _createConversation(); Error = null;
+        }
         if (_pending.Count != 0 || _conversation.Phase != "closed") throw new NotSupportedException("Competing conversation requests require arbitration.");
         _pending.Enqueue((speaker, topic, completed));
     }
@@ -84,7 +94,7 @@ internal partial class RuntimeNativeConversation : Node
             Func<FalloutCondition, FalloutFormKey?>? currentCell = resolveRunOnCell is null ? null :
                 condition => resolveRunOnCell(_speaker, condition);
             _conditions = new(_records, _quests, _speaker, FalloutDialogueSpeaker.Read(_records, npc.FormKey, _templates?.Invoke(_speaker)),
-                _runtimeConditions, currentCell, _healthPercentage, _actorValue, _talkedToPlayer, _factions);
+                _runtimeConditions, currentCell, _healthPercentage, _actorValue, _talkedToPlayer, _factions, _isDead);
             _speakerName = FalloutDialogueTopic.Text(npc.ReadSubrecords().Single(field => field.Signature == "FULL").Data.Span);
             _layer = new CanvasLayer { Layer = 95 }; AddChild(_layer);
             _menu = new(() => _speech.SkipResponse(), Fail); _layer.AddChild(_menu);
@@ -133,6 +143,7 @@ internal partial class RuntimeNativeConversation : Node
     {
         if (Error is not null) return;
         Error = error.Message;
+        _pending.Clear(); _completed = null;
         ReleaseFacing();
         _layer?.QueueFree(); _layer = null; _menu = null;
         _player.SetModalInput(false);

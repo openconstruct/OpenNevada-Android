@@ -170,6 +170,8 @@ internal partial class RuntimeNativeOpeningStageDriver : Node
         _inventory = inventory;
         _captureScripts = captureScripts;
         _globals = globals;
+        _reputation = new(pluginStack);
+        _reputation.Restore(restore?.State.Reputations ?? []);
         _playerSkills = new(pluginStack, () => _special, IsPlayerTagSkill, () => _traits, globals, inventory,
             raceSexContract.Player, () => pluginStack.RuntimeFormKey(_character.RaceRuntimeFormId), () => _scripts.Session.Hardcore,
             () => _scripts.References!.AcquiredPerks(pluginStack.RuntimeFormKey(0x14)));

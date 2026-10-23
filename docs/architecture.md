@@ -186,6 +186,15 @@ Pipboy channels, independently of the custom HUD color. Unspent character
 creation state can be saved, while active interaction
 continuations still fail visibly instead of being discarded.
 
+Player-wide reputation has independent fame and infamy counters, winning REPU
+maximum scales and source reputation GMST tier boundaries. Queries and reached
+script mutations share that owner, persisted in campaign save v22. Older saves had no supported reputation mutations; migrating them starts both
+counters at zero. Random INFO pools
+respect quest order and authored Random End boundaries and consume the saved
+script random stream. A failed conversation releases its modal lifetime; a new
+explicit request may start a fresh transition owner while keeping prior gameplay,
+results and said history. Failed transitions are never silently continued.
+
 Container menus own row focus and paging independently on the player and source
 sides. Gamepad input enters the same transfer and quantity owners as keyboard
 and touch; it cannot bypass quantity selection or inventory revalidation. A

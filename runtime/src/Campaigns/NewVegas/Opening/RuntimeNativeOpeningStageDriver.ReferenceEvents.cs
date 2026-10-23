@@ -8,6 +8,7 @@ namespace OpenNV.Runtime.Campaigns.NewVegas.Opening;
 internal partial class RuntimeNativeOpeningStageDriver
 {
     private RuntimeNativeConversation? _conversation;
+    private FalloutReputationState _reputation = null!;
     private FalloutBodyPartData? _dialoguePlayerBodyParts;
     private FalloutReferenceScripts? _resultScripts;
     private FalloutQuestStages? _stageResults;
@@ -43,10 +44,10 @@ internal partial class RuntimeNativeOpeningStageDriver
                 GetTree().Root.FindChildren("*", "", true, false).OfType<RuntimeNativeNpc>()
                     .Single(npc => npc.Appearance.Reference == actor).CurrentFurniture == furniture, ApplyReferenceEffect,
                 _scripts.MessageResults.Take, actor => _speech!.IsTalking(actor), ActorValue, IsPlayerTagSkill, _globals,
-                ApplyNativeSourceCommand, IsInCombat, IsInSameCell, _scripts.Events, ReferenceDistance, IsInInterior));
+                ApplyNativeSourceCommand, IsInCombat, IsInSameCell, _scripts.Events, ReferenceDistance, IsInInterior, _reputation));
         _resultScripts = results;
         _stageResults = new(_pluginStack, _quests, results.StageSteps,
-            condition => FalloutPlatformConditions.Evaluate(condition) ?? _quests.Evaluate(condition), () => !_moviePlaying);
+            condition => FalloutPlatformConditions.Evaluate(condition) ?? _reputation.Evaluate(condition) ?? _quests.Evaluate(condition), () => !_moviePlaying);
         _scriptHost = _scriptHost with { ExecuteProgram = results.ExecuteProgram, InvokeFunction = results.InvokeFunction };
         _scripts.Host = _scriptHost;
         _speech!.ExecuteResults = results.ExecuteResult;
@@ -54,6 +55,8 @@ internal partial class RuntimeNativeOpeningStageDriver
         _conversation.Configure(_pluginStack, _quests, _player, _speech!, condition =>
         {
             if (FalloutPlatformConditions.Evaluate(condition) is { } platform) return platform;
+            if (_reputation.Evaluate(condition) is { } standing) return standing;
+            if (condition.Function == 84) return _scripts.References!.DeadCount(condition.FormArgument1);
             if (condition.Function is 56 or 58 or 59 or 79 or 420 or 421 or 546) return _quests.Evaluate(condition);
             if (condition.Function == 74) return (_globals ?? throw new InvalidOperationException("Dialogue has no global state owner.")).Get(condition.FormArgument1);
             if (condition.Function == 53) return (float)_scripts.References!.Get(condition.FormArgument1).Read(condition.Argument2);
@@ -83,7 +86,8 @@ internal partial class RuntimeNativeOpeningStageDriver
         }, DialogueActorValue, actor => _scripts.References!.Get(actor).Templates,
             actor => _scripts.References!.Get(actor).TalkedToPlayer = true,
             actor => _scripts.References!.Get(actor).TalkedToPlayer,
-            actor => _scripts.References!.ActorFactions(actor));
+            actor => _scripts.References!.ActorFactions(actor), _scripts.ScriptValues.RandomIndex,
+            actor => _pluginStack.RuntimeFormId(actor) == 0x14 ? Vitals.HitPoints <= 0 : _scripts.References!.QueryDead(actor) != 0);
         AddChild(_conversation);
     }
 

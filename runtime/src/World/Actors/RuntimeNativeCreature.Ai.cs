@@ -119,7 +119,7 @@ internal sealed partial class RuntimeNativeCreature
         FalloutDialoguePackage? dialogue = null;
         if (source is not null)
         {
-            if (source.Procedure == 1) follow = FalloutFollowPackage.Read(selected!);
+            if (source.Procedure is 1 or 7) follow = FalloutFollowPackage.Read(selected!);
             else if (source.Procedure == 15)
             {
                 dialogue = FalloutDialoguePackage.Read(selected!);

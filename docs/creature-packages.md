@@ -2,12 +2,13 @@
 
 Creature package selection follows winning PKID priority and source conditions.
 Follow and Dialogue declarations may omit PLDT; requiring a start location for
-every package incorrectly rejected ordinary companion packages. The admitted
-Follow procedure reads its target and distance from PTDT. Creature Dialogue can
-approach its target and request the shared conversation owner. Package conditions
-route GetDeadCount through retained corpse and lethal-transition state. Reached
-start/end locations, other procedures (including source Accompany), unsupported
-conditions and event effects remain explicit failures.
+every package incorrectly rejected ordinary companion packages. Follow and
+Accompany read their target and distance from PTDT and share the continuous
+pursuit motion owner; creature Dialogue can approach its target and request the
+shared conversation owner. Package conditions route GetDeadCount through retained
+corpse and lethal-transition state. NPC Accompany procedures, reached start/end
+locations, other procedures, unsupported conditions and event effects remain
+explicit failures.
 
 Native movement shares the actor's source BBX envelope, KF root displacement,
 turn/speed configuration, source navigation and Godot collision solver with
@@ -61,5 +62,7 @@ owned ED-E anatomy declares no mobility limbs. See the
 Run the owned package check with the ReferenceScriptContractProbe's
 `--companion-packages` option. NativeActorCombatAudit accepts owned Data followed
 by `--follow <ACRE runtime hex> <PACK runtime hex> [MoveTo reference runtime hex]`
-for the isolated motion check. The optional reference uses the real MoveTo owner
+for the isolated motion check. NativeAccompanyAudit accepts owned Data followed by
+`<ACRE runtime hex> <PACK runtime hex>` for the open-floor Accompany distance and
+cold-pose check; it does not establish ordinary recruitment or target selection. The optional reference uses the real MoveTo owner
 before admission, so a relocated actor uses its current cell's encounter policy.

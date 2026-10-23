@@ -49,6 +49,23 @@ player input. Cheyenne's 152afa/84 condition no longer faults, but its source
 Accompany procedure remains an explicit unbound failure. The full runtime gate,
 Android export and v2/v3 signature checks pass for this block.
 
+## Cheyenne Accompany work block
+
+On `codex/cheyenne-accompany` the Follow/Accompany reader retains the source
+procedure, and creature package selection admits source Accompany (PACK type 7)
+through the existing continuous pursuit motion owner. The synthetic
+Follow/Accompany contract and owned companion-package probe pass. The isolated
+NativeAccompanyAudit passes for Cheyenne's `FalloutNV.esm:152afa` package with
+source distance 128 units, open-floor pursuit, stop and cold pose; it does not
+prove ordinary recruitment, target selection or the saloon scene. Cheyenne's
+`152afa/84` condition and procedure 7 no longer fault at admission. NPC Accompany
+procedures and all start/end-location variants remain explicit failures. APK
+0.1.22/code 23 is built, exported and v2/v3 signature checked but not installed
+or physically tested. SHA-256
+`b84e30e69e3e364ef18b8cd4d29f73bf93b9a5be689493c96da7b85d3916e792`;
+file work/opennv-cheyenne-accompany.apk. This candidate includes the code-22
+Sunny trigger/location work.
+
 Prior code-19 result:
 Owned Pip-Boy/source-color/controller audits, Android export and v2/v3 signatures
 pass. The final required full runtime gate and handheld display check pass.
@@ -252,6 +269,10 @@ profile collectors stopped; any current collector must be stopped after testing.
 
 ## Verification and next owners
 
+Accompany native audit: work/opennv-cheyenne-accompany.log (PASS)
+Accompany owned/synthetic probes: work/opennv-cheyenne-contracts.log (PASS)
+Accompany gate: work/opennv-cheyenne-runtime-gate.log (PASS)
+Accompany export: work/opennv-cheyenne-export.log (PASS)
 Sunny package gate: work/opennv-sunny-package-runtime-gate.log (PASS)
 Owned Sunny package audit: work/opennv-sunny-dialogue-owned.log (PASS)
 Synthetic package locations: work/opennv-sunny-dialogue-synthetic.log (PASS)
@@ -281,10 +302,10 @@ Code-18 physical test: work/opennv-device-v18.private.log
    playGroup and other operands; Doc travel/procedure and six prior room refs.
    The current interior admitted 190/194 references; four LIGH declarations and
    a reference script's mySelf binding remain unsupported, independently of UI.
-   Cheyenne's 152afa GetDeadCount condition is now routed, but its Accompany
-   procedure remains unbound. Tag/trait physical acceptance and intermittent
-   right-stick focus loss remain open. Earlier menu diagnostics reported two
-   ObjectDB leaks.
+   Cheyenne's 152afa GetDeadCount condition and creature Accompany procedure are
+   now routed; NPC Accompany procedures remain unbound. Tag/trait physical
+   acceptance and intermittent right-stick focus loss remain open. Earlier menu
+   diagnostics reported two ObjectDB leaks.
 
 Build toolchains and private continuation are in the task outputs file
 `OpenNevada-Android-handoff.md`, outside the repository. Never overlap Android

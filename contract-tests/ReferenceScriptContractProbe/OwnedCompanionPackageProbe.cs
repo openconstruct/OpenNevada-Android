@@ -10,10 +10,13 @@ internal static class OwnedCompanionPackageProbe
         using var records = FalloutPluginStack.Load(content.PluginSources);
         var normal = FalloutFollowPackage.Read(records.GetEffective(records.RuntimeFormKey(0x1572eb)));
         var distant = FalloutFollowPackage.Read(records.GetEffective(records.RuntimeFormKey(0x1572ea)));
+        var accompany = FalloutFollowPackage.Read(records.GetEffective(records.RuntimeFormKey(0x152afa)));
         var dialogue = FalloutScriptPackage.Read(records.GetEffective(records.RuntimeFormKey(0x1579db)));
         if (normal.Distance != 330 || distant.Distance != 500 || normal.Target != records.RuntimeFormKey(0x14) ||
-            distant.Target != normal.Target || dialogue.Procedure != 15 || dialogue.LocationType is not null)
-            throw new InvalidDataException("Owned follow/dialogue package differs from the selected source contract.");
+            distant.Target != normal.Target || normal.Procedure != 1 || accompany.Procedure != 7 ||
+            accompany.Target != records.RuntimeFormKey(0x104e85) || accompany.Distance != 128 ||
+            dialogue.Procedure != 15 || dialogue.LocationType is not null)
+            throw new InvalidDataException("Owned follow/accompany/dialogue package differs from the selected source contract.");
         var health = FalloutActorHealthSource.Read(records, records.RuntimeFormKey(0x10c769), new(1, 1));
         var later = FalloutActorHealthSource.Read(records, records.RuntimeFormKey(0x10c769), new(40, 1));
         if (health.Health != 180 || later.Health != 540) throw new InvalidDataException("Owned scaled creature health differs.");
@@ -45,6 +48,6 @@ internal static class OwnedCompanionPackageProbe
         distantRequested = true;
         if (FalloutAiPackages.Select(records, actor, Condition)?.FormKey != distant.Form)
             throw new InvalidDataException("Requested follow distance lost source priority.");
-        Console.WriteLine("OPENNV_OWNED_COMPANION_PACKAGES_PASS followDistances=true dialogueWithoutStart=true scaledHealth=true ordinaryRecruitment=separate");
+        Console.WriteLine("OPENNV_OWNED_COMPANION_PACKAGES_PASS followDistances=true accompanyTarget=true dialogueWithoutStart=true scaledHealth=true ordinaryRecruitment=separate");
     }
 }

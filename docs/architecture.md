@@ -97,8 +97,9 @@ device stays hidden. Self rays exclude the player's capsule and bone volumes.
 These contacts provide hit queries, not completed limb rigid-body response.
 
 Creature package movement and combat share the source envelope, root motion and
-native collision owner. Follow/Dialogue select their source target without an
-invented start location. Package position, animation identity/clock and talk
+native collision owner. Follow, Accompany and Dialogue select their source target
+without an invented start location. Follow and Accompany reuse the continuous
+pursuit owner with their authored PTDT distance. Package position, animation identity/clock and talk
 history are reference-owned save state. Presentation eviction cannot reset them.
 Source schedule selection reads the shared game calendar before evaluating
 package conditions. Resident actors react to hour changes and periodic condition

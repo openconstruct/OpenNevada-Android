@@ -15,6 +15,7 @@ public partial class NativeReferenceEventsAudit : Node
         RuntimeNativePlayer? player = null;
         try
         {
+            NativeSpeechLifetimeContracts.Run(this);
             Directory.CreateDirectory(directory);
             File.WriteAllBytes(path, Fixture());
             using var records = FalloutPluginStack.Load(directory, ["Contact.esm"]);

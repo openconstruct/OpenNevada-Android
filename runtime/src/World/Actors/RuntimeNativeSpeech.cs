@@ -157,8 +157,7 @@ internal partial class RuntimeNativeSpeech : Node
             .Where(actor => (actor is RuntimeNativeNpc npc && npc.Appearance.Reference == speaker.FormKey ||
                 actor is RuntimeNativeCreature creature && creature.Appearance.Reference == speaker.FormKey) && actor.IsVisibleInTree()).ToArray();
         if (actors.Length != 1) throw new NotSupportedException($"Source speaker {speaker.FormKey} has {actors.Length} resident runtime actors.");
-        _speaker?.ClearSpeechFace();
-        _speaker?.EndResponseAnimation();
+        ReleaseSpeakerPresentation();
         _speaker = actors[0] as RuntimeNativeNpc;
         _creatureSpeaker = actors[0] as RuntimeNativeCreature;
         _speakerReference = speaker.FormKey;
@@ -228,7 +227,7 @@ internal partial class RuntimeNativeSpeech : Node
             if (_responseCompleted is { } completion)
             {
                 _responseCompleted = null; _info = null; _lip = null; _lipWeights = [];
-                _speaker?.ClearSpeechFace();
+                ReleaseSpeakerPresentation();
                 completion();
                 return;
             }
@@ -238,7 +237,7 @@ internal partial class RuntimeNativeSpeech : Node
             _info = null;
             _lip = null;
             _lipWeights = [];
-            _speaker?.ClearSpeechFace();
+            ReleaseSpeakerPresentation();
             GD.Print($"OPENNV_NATIVE_SPEECH_END info={completed.Record.FormKey} owner=audio-finished");
             RunResults(completed, completedSpeaker ?? throw new InvalidOperationException("Completed voice lost its source actor."), false);
             InfoCompleted?.Invoke(completed.Record.FormKey);
@@ -254,8 +253,7 @@ internal partial class RuntimeNativeSpeech : Node
         Error = error.Message;
         _voice.Stop();
         ClearResponseSound();
-        _speaker?.ClearSpeechFace();
-        _speaker?.EndResponseAnimation();
+        ReleaseSpeakerPresentation();
         _advance = false;
         GD.PushError($"OPENNV_NATIVE_SPEECH_DIVERGENCE {error.Message}");
     }
@@ -265,6 +263,19 @@ internal partial class RuntimeNativeSpeech : Node
         if (!FalloutDialogueTopic.CodeLines(begin ? info.BeginScript : info.EndScript).Any()) return;
         (ExecuteResults ?? throw new NotSupportedException($"INFO {info.Record.FormKey} has no result-script owner."))(info, speaker, begin);
     }
+
+    private void ReleaseSpeakerPresentation()
+    {
+        var speaker = _speaker;
+        _speaker = null; _creatureSpeaker = null;
+        // The voice owner survives cell retirement. Its previous actor's mesh
+        // tree does not; only a still-resident actor can accept presentation work.
+        if (!IsInstanceValid(speaker) || !speaker!.IsInsideTree()) return;
+        speaker.ClearSpeechFace();
+        speaker.EndResponseAnimation();
+    }
+
+    public override void _ExitTree() => ReleaseSpeakerPresentation();
 
     private void ClearResponseSound()
     {

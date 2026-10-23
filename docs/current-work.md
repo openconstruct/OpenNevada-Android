@@ -54,8 +54,29 @@ seconds after Continue; steady play at this outdoor view was about 10 FPS.
 Ordinary F5 saved successfully at 21:24:55, schema v22. Backup:
 work/opennv-v20-loaded-save.private.json, SHA-256
 4dd0a2d9da576a68381b28eda25ec7c831b03d3846638031603ca4d9fabc070a.
-The owner has been asked to retry dialogue/choices and save afterward. That
-physical test has not been reported yet; do not claim spoken dialogue is accepted.
+The owner confirmed Victor and Easy Pete conversations work; Sunny failed after
+entering the saloon. At 21:31, binding Sunny attempted to clear the former
+speaker's freed MeshInstance3D. Ordinary saving still succeeded at 21:31:24;
+the owner is reloading to retry. Read-only post-dialogue backup:
+work/opennv-v20-after-dialogues.private.json, SHA-256
+b5f684801cc84f1492ee8e740615abeffa9b7cf8f1349c759a7d19377009799b.
+A fresh speech-lifetime work block releases actor presentation references when
+responses finish, fail or exit; binding another speaker also checks residency
+before touching an old actor. Candidate code 21 passes the final full local gate and selected owned audit;
+Android export and v2/v3 signatures pass. APK 0.1.20/code 21 SHA-256:
+89fbcfd0c6c036d048ba02b3763e60bae59221dc0f8d2e062c6b7ccadb714156.
+Installation/restart approval is pending; code 20 remains running. Native freed/detached actor cleanup and synthetic
+inventory query ownership/invalid run-on/missing-owner checks pass.
+Logs: work/opennv-speech-choices-final-runtime-gate.log,
+work/opennv-speech-lifetime-contract.log and work/opennv-speech-owned.log.
+The owned audit reaches four Easy Pete choices and two Sunny choices without
+executing their result scripts, audio or player input.
+Reload allowed Sunny's greeting, confirmed by the owner and INFO 10b755 voice
+telemetry. Building the next choices then failed at INFO 10b753, CTDA 47
+GetItemCount on the player (run-on 1). The general dialogue condition owner now
+routes item counts for speaker/listener/explicit references to retained inventories;
+Form-list item queries remain unsupported and fail visibly. The owned selection audit now advances
+past greetings into choice enumeration. Tutorial progression remains unaccepted.
 
 Candidate code 20 adds player-owned fame/infamy, winning REPU scales and source
 GMST thresholds, CTDA/raw/percentage/rank queries and reached script mutations.
@@ -214,7 +235,7 @@ Prior container gate/audit: work/opennv-container-final-{runtime-gate,owned}.log
 Code-17 report: work/opennv-loot-freeze.private.log
 Code-18 physical test: work/opennv-device-v18.private.log
 
-1. Finish the pending physical bar dialogue/choices/save check, then broaden looting coverage: quantity choices, paging, Take All and
+1. Install code 21 when the owner is ready; test Sunny choices/tutorial handoff, then save and cold Continue. Victor/Pete dialogue and Sunny greeting after reload are accepted on code 20. Then broaden looting coverage: quantity choices, paging, Take All and
    other containers. Basic selection/transfer/close is physically accepted.
 2. Attribute active CPU update cost, remove repeated unchanged work, and profile
    mesh/material batching plus shader/terrain cost. Sustained 30 FPS is unachieved.

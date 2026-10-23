@@ -22,6 +22,7 @@ internal partial class RuntimeNativeConversation : Node
     private Func<FalloutFormKey, float>? _healthPercentage;
     private Func<FalloutFormKey, int, float>? _actorValue;
     private Func<FalloutFormKey, bool>? _isDead;
+    private Func<FalloutFormKey, FalloutFormKey, int>? _itemCount;
     private Func<FalloutFormKey, FalloutActorTemplateSelection?>? _templates;
     private Action<FalloutFormKey>? _recordTalkedToPlayer;
     private Func<FalloutFormKey, bool>? _talkedToPlayer;
@@ -51,12 +52,13 @@ internal partial class RuntimeNativeConversation : Node
         Func<FalloutFormKey, FalloutActorTemplateSelection?>? templates = null,
         Action<FalloutFormKey>? recordTalkedToPlayer = null,
         Func<FalloutFormKey, bool>? talkedToPlayer = null,
-        Func<FalloutFormKey, IReadOnlyDictionary<FalloutFormKey, sbyte>>? factions = null, Func<int, int>? randomIndex = null, Func<FalloutFormKey, bool>? isDead = null)
+        Func<FalloutFormKey, IReadOnlyDictionary<FalloutFormKey, sbyte>>? factions = null, Func<int, int>? randomIndex = null, Func<FalloutFormKey, bool>? isDead = null,
+        Func<FalloutFormKey, FalloutFormKey, int>? itemCount = null)
     {
         _records = records; _quests = quests; _player = player; _speech = speech; _runtimeConditions = evaluate;
         _resolveRunOnCell = resolveRunOnCell;
         _healthPercentage = healthPercentage;
-        _actorValue = actorValue; _isDead = isDead;
+        _actorValue = actorValue; _isDead = isDead; _itemCount = itemCount;
         _templates = templates;
         _recordTalkedToPlayer = recordTalkedToPlayer;
         _talkedToPlayer = talkedToPlayer;
@@ -94,7 +96,7 @@ internal partial class RuntimeNativeConversation : Node
             Func<FalloutCondition, FalloutFormKey?>? currentCell = resolveRunOnCell is null ? null :
                 condition => resolveRunOnCell(_speaker, condition);
             _conditions = new(_records, _quests, _speaker, FalloutDialogueSpeaker.Read(_records, npc.FormKey, _templates?.Invoke(_speaker)),
-                _runtimeConditions, currentCell, _healthPercentage, _actorValue, _talkedToPlayer, _factions, _isDead);
+                _runtimeConditions, currentCell, _healthPercentage, _actorValue, _talkedToPlayer, _factions, _isDead, _itemCount);
             _speakerName = FalloutDialogueTopic.Text(npc.ReadSubrecords().Single(field => field.Signature == "FULL").Data.Span);
             _layer = new CanvasLayer { Layer = 95 }; AddChild(_layer);
             _menu = new(() => _speech.SkipResponse(), Fail); _layer.AddChild(_menu);

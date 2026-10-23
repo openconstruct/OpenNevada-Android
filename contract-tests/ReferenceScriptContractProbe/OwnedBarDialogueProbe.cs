@@ -31,13 +31,20 @@ internal static class OwnedBarDialogueProbe
                 if (condition.RunOn == 1 && condition.Function == 70 && condition.Argument1 <= 1)
                     return (condition.Argument1 == 1) == saved.Character.Female ? 1 : 0;
                 throw new NotSupportedException($"Owned greeting {form:x8} condition {condition.Owner.FormKey}/{condition.Function}/{condition.RunOn} is unbound.");
-            }, isDead: actor => records.RuntimeFormId(actor) == 0x14 ? saved.Vitals!.HitPoints <= 0 : world.QueryDead(actor) != 0);
+            }, isDead: actor => records.RuntimeFormId(actor) == 0x14 ? saved.Vitals!.HitPoints <= 0 : world.QueryDead(actor) != 0,
+                itemCount: (actor, item) => records.RuntimeFormId(actor) == 0x14
+                    ? saved.Inventory.SingleOrDefault(value => value.RuntimeFormId == records.RuntimeFormId(item))?.Count ?? 0
+                    : world.Inventory(actor, 1, globals).Contents.Item(item)?.Count ?? 0);
             // Selection audit only: never executes results or changes the copied save.
             var conversation = new FalloutConversation(records, quests, conditions.Evaluate, (_, _) => { }, randomIndex: _ => 0);
             conversation.Start(actor, FalloutDialogueTopic.Find(records, "DIAL", "GREETING").FormKey);
             if (conversation.Phase != "speaking" || conversation.Response is null)
                 throw new InvalidOperationException("Reported actor has no eligible spoken greeting.");
             Console.WriteLine($"OPENNV_BAR_GREETING_SELECTED reference={reference} info={conversation.Info!.Record.FormKey} resultScripts=not-executed audio-and-input=separate");
+            var remaining = 32;
+            while (conversation.Phase == "speaking" && --remaining > 0) conversation.CompleteResponse();
+            if (remaining == 0) throw new InvalidOperationException("Owned greeting follow-ups did not settle.");
+            Console.WriteLine($"OPENNV_BAR_CHOICES_SELECTED reference={reference} phase={conversation.Phase} choices={conversation.Choices.Count}");
         }
         var rep = records.EffectiveRecords("REPU").First().FormKey;
         reputations.Change(rep, 1, 2, "addreputation");

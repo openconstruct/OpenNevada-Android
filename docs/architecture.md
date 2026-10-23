@@ -72,7 +72,11 @@ their spatial CELL. Save v17 carries zone state, while earlier saved actor choic
 remain unchanged. See [encounter admission](encounter-admission.md); resource
 preparation alone does not establish visible or functioning actors.
 FalloutConversation owns INFO selection, results and choices; native source menu
-and voice adapters report input/completion. Actual player furniture and posed
+and voice adapters report input/completion. Actor-scoped dialogue item queries
+resolve speaker/listener/explicit-reference inventory ownership. The session voice
+owner releases actor presentation references at response completion and only
+resets still-resident presentation when rebinding after cell retirement.
+Actual player furniture and posed
 actor query contacts now connect to reference events. Complete event/physics,
 dialogue presentation and cold interaction restoration remain incomplete; see
 reference-events.md and dialogue-and-furniture.md for the bounded contracts.

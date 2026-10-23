@@ -87,7 +87,15 @@ internal partial class RuntimeNativeOpeningStageDriver
             actor => _scripts.References!.Get(actor).TalkedToPlayer = true,
             actor => _scripts.References!.Get(actor).TalkedToPlayer,
             actor => _scripts.References!.ActorFactions(actor), _scripts.ScriptValues.RandomIndex,
-            actor => _pluginStack.RuntimeFormId(actor) == 0x14 ? Vitals.HitPoints <= 0 : _scripts.References!.QueryDead(actor) != 0);
+            actor => _pluginStack.RuntimeFormId(actor) == 0x14 ? Vitals.HitPoints <= 0 : _scripts.References!.QueryDead(actor) != 0,
+            (actor, item) =>
+            {
+                if (!FalloutReferenceWorld.IsInventoryItem(_pluginStack.GetEffective(item).Signature))
+                    throw new NotSupportedException($"Dialogue inventory query {item} needs its item/list owner.");
+                var inventory = _pluginStack.RuntimeFormId(actor) == 0x14 ? _inventory :
+                    _scripts.References!.Inventory(actor, SourcePlayerLevel, _globals).Contents;
+                return inventory.Item(item)?.Count ?? 0;
+            });
         AddChild(_conversation);
     }
 

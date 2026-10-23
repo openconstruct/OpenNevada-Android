@@ -7,7 +7,8 @@ internal sealed class FalloutDialogueConditions(FalloutPluginStack records, Fall
     Func<FalloutFormKey, int, float>? actorValue = null,
     Func<FalloutFormKey, bool>? talkedToPlayer = null,
     Func<FalloutFormKey, IReadOnlyDictionary<FalloutFormKey, sbyte>>? factions = null,
-    Func<FalloutFormKey, bool>? isDead = null)
+    Func<FalloutFormKey, bool>? isDead = null,
+    Func<FalloutFormKey, FalloutFormKey, int>? itemCount = null)
 {
     internal FalloutDialogueConditions(FalloutPluginStack records, FalloutQuestState quests, FalloutFormKey speaker,
         FalloutNpcAppearance appearance, Func<FalloutCondition, float>? runtime = null)
@@ -18,7 +19,8 @@ internal sealed class FalloutDialogueConditions(FalloutPluginStack records, Fall
     internal float Evaluate(FalloutCondition condition)
     {
         if ((condition.Function == 431 && healthPercentage is not null) ||
-            (condition.Function == 14 && actorValue is not null) || (condition.Function == 46 && isDead is not null))
+            (condition.Function == 14 && actorValue is not null) || (condition.Function == 46 && isDead is not null) ||
+            (condition.Function == 47 && itemCount is not null))
         {
             var actor = condition.RunOn switch
             {
@@ -28,6 +30,7 @@ internal sealed class FalloutDialogueConditions(FalloutPluginStack records, Fall
                     ?? throw new InvalidDataException("Dialogue actor query has no explicit reference."),
                 _ => throw new NotSupportedException($"Dialogue actor query run-on {condition.RunOn} is unbound."),
             };
+            if (condition.Function == 47) return itemCount!(actor, condition.FormArgument1);
             return condition.Function == 431 ? healthPercentage!(actor) : condition.Function == 46 ? isDead!(actor) ? 1 : 0 :
                 actorValue!(actor, checked((int)condition.Argument1));
         }

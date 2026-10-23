@@ -216,6 +216,15 @@ internal static class ActorSourceContracts
             Check(actorConditions.Evaluate(healthCondition with { Function = 14, RunOn = 2, Reference = 0x901, Argument1 = 27 }) == 62.5f,
                 "Explicit-reference actor value did not reach its authoritative owner.");
             Reject(() => actorConditions.Evaluate(healthCondition with { Function = 14, RunOn = 2, Argument1 = 27 }));
+            var inventoryConditions = new FalloutDialogueConditions(records, quests, Key(0x900), speaker,
+                itemCount: (actor, item) => item == Key(0x850) ? actor == Key(0x14) ? 7 : actor == Key(0x901) ? 3 : 0 :
+                    throw new InvalidDataException("Wrong inventory item."));
+            foreach (var (runOn, reference, count) in new[] { (0u, 0u, 0), (1u, 0u, 7), (2u, 0x901u, 3) })
+                Check(inventoryConditions.Evaluate(healthCondition with { Function = 47, Argument1 = 0x850, RunOn = runOn, Reference = reference }) == count,
+                    "Dialogue item count selected the wrong inventory or confused absence with ownership.");
+            Reject(() => inventoryConditions.Evaluate(healthCondition with { Function = 47, Argument1 = 0x850, RunOn = 2 }));
+            Reject(() => inventoryConditions.Evaluate(healthCondition with { Function = 47, Argument1 = 0x850, RunOn = 3 }));
+            Reject(() => healthConditions.Evaluate(healthCondition with { Function = 47, Argument1 = 0x850, RunOn = 1 }));
             var scripts = new FalloutReferenceScripts(records, world, quests, new((_, _) => false, _ => { }));
             Check(scripts.Activate(Key(0x904), Key(0x900)).Error is null && world.MapMarkerVisibility(Key(0x903)) == 0,
                 "GetActionRef confused a non-player activator with the compiled Player reference.");

@@ -26,9 +26,28 @@ acceptance was performed on code 21; leave the current session running. Pre-inst
 work/opennv-pre-v21-save.private.json, SHA-256
 b5f684801cc84f1492ee8e740615abeffa9b7cf8f1349c759a7d19377009799b.
 It matches the post-dialogue save; no save fields were changed. Physical Sunny
-choice/tutorial progression remains pending. The owner requested a budget
-stopping point after install/restart and a thorough external handoff; do not
-start another feature or performance work block automatically.
+choice/tutorial progression remains pending. The prior budget stopping point and
+external handoff were completed; a new source work block is now active on
+`codex/sunny-dialogue-package`.
+
+## Sunny meeting package work block
+
+APK 0.1.21/code 22 is built, exported and v2/v3 signature checked but not
+installed or physically tested. SHA-256 `938b31e0862ba3dde82f1aa7c31a19f4a5310c57d0f60bcd7d5da53725b678c2`;
+file work/opennv-sunny-package.apk. Installed code 21 remains the running
+candidate and its session was not disturbed. On this branch the source
+dialogue-package owner accepts PLDT near-editor wait locations and PLD2
+near-reference trigger volumes.
+The target must enter the authored XPRM box (or its radius) before ordinary NAVM
+travel begins, and PTDT supplies the activation distance. Package conditions now
+route GetDeadCount through retained corpse and lethal-transition state for NPC and
+creature packages. Synthetic PLDT/PLD2 parsing with duplicated authored PLD2
+passes. The owned native Sunny audit passes package=105cc7, outsideNoMotion,
+triggerGated, ownedNavm, targetRange, requestOnce and
+completionAfterConversation; it does not execute dialogue results, audio or
+player input. Cheyenne's 152afa/84 condition no longer faults, but its source
+Accompany procedure remains an explicit unbound failure. The full runtime gate,
+Android export and v2/v3 signature checks pass for this block.
 
 Prior code-19 result:
 Owned Pip-Boy/source-color/controller audits, Android export and v2/v3 signatures
@@ -233,7 +252,11 @@ profile collectors stopped; any current collector must be stopped after testing.
 
 ## Verification and next owners
 
-Latest gate: work/opennv-bar-final-runtime-gate.log (PASS)
+Sunny package gate: work/opennv-sunny-package-runtime-gate.log (PASS)
+Owned Sunny package audit: work/opennv-sunny-dialogue-owned.log (PASS)
+Synthetic package locations: work/opennv-sunny-dialogue-synthetic.log (PASS)
+Sunny package export: work/opennv-sunny-package-export.log (PASS)
+Latest prior gate: work/opennv-bar-final-runtime-gate.log (PASS)
 Bar selection audit: work/opennv-bar-final-owned.log
 Relocated build: work/opennv-relocated-build.log (PASS)
 Device code-20 log: work/opennv-device-v20.private.log
@@ -247,7 +270,7 @@ Prior container gate/audit: work/opennv-container-final-{runtime-gate,owned}.log
 Code-17 report: work/opennv-loot-freeze.private.log
 Code-18 physical test: work/opennv-device-v18.private.log
 
-1. Finish the owner test of Sunny choices/tutorial handoff on installed code 21, then save and cold Continue. Victor/Pete dialogue and Sunny greeting after reload are accepted on code 20. Then broaden looting coverage: quantity choices, paging, Take All and
+1. Finish the owner test of Sunny choices/tutorial handoff on installed code 21, then save and cold Continue. The source package now waits for the authored trigger volume, approaches the player and starts the shared conversation; the installed code-21 APK was built before this fix. Victor/Pete dialogue and Sunny greeting after reload are accepted on code 20. Then broaden looting coverage: quantity choices, paging, Take All and
    other containers. Basic selection/transfer/close is physically accepted.
 2. Attribute active CPU update cost, remove repeated unchanged work, and profile
    mesh/material batching plus shader/terrain cost. Sustained 30 FPS is unachieved.
@@ -258,8 +281,10 @@ Code-18 physical test: work/opennv-device-v18.private.log
    playGroup and other operands; Doc travel/procedure and six prior room refs.
    The current interior admitted 190/194 references; four LIGH declarations and
    a reference script's mySelf binding remain unsupported, independently of UI.
-   Tag/trait physical acceptance and intermittent right-stick focus loss remain
-   open. Earlier menu diagnostics reported two ObjectDB leaks.
+   Cheyenne's 152afa GetDeadCount condition is now routed, but its Accompany
+   procedure remains unbound. Tag/trait physical acceptance and intermittent
+   right-stick focus loss remain open. Earlier menu diagnostics reported two
+   ObjectDB leaks.
 
 Build toolchains and private continuation are in the task outputs file
 `OpenNevada-Android-handoff.md`, outside the repository. Never overlap Android

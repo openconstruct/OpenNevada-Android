@@ -72,6 +72,7 @@ internal sealed partial class RuntimeNativeCreature
         71 => _aiWorld!.ActorFactions(Appearance.Reference!.Value).GetValueOrDefault(condition.FormArgument1, (sbyte)-1) >= 0 ? 1 : 0,
         73 => _aiWorld!.ActorFactions(Appearance.Reference!.Value).GetValueOrDefault(condition.FormArgument1, (sbyte)-1),
         58 or 59 or 79 or 546 => _aiQuests!.Evaluate(condition),
+        84 => _aiWorld!.DeadCount(condition.FormArgument1),
         32 when condition.RunOn == 0 => InSameCell(condition.FormArgument1) ? 1 : 0,
         35 => _aiWorld!.IsEnabled(Appearance.Reference!.Value) ? 0 : 1,
         36 when condition.Argument1 == 0 => Combat!.PackagePlayer?.ModalInput == true ? 1 : 0,

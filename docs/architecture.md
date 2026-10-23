@@ -73,7 +73,11 @@ remain unchanged. See [encounter admission](encounter-admission.md); resource
 preparation alone does not establish visible or functioning actors.
 FalloutConversation owns INFO selection, results and choices; native source menu
 and voice adapters report input/completion. Actor-scoped dialogue item queries
-resolve speaker/listener/explicit-reference inventory ownership. The session voice
+resolve speaker/listener/explicit-reference inventory ownership. Source dialogue
+packages retain PLDT/PLD2 location kinds; a near-editor wait location, authored
+trigger primitive and activation distance feed the existing travel/conversation
+owner, while unsupported location kinds stay visible failures. Package conditions
+route GetDeadCount through retained corpse and lethal-transition state. The session voice
 owner releases actor presentation references at response completion and only
 resets still-resident presentation when rebinding after cell retirement.
 Actual player furniture and posed

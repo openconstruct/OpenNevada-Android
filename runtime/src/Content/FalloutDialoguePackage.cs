@@ -3,7 +3,8 @@ using System.Buffers.Binary;
 namespace OpenNV.Runtime.Content;
 
 internal sealed record FalloutDialoguePackage(FalloutFormKey Form, FalloutFormKey Target, int ActivationDistance,
-    float FieldOfView, FalloutFormKey? Topic, uint Flags, uint Type, uint TrailingData)
+    float FieldOfView, FalloutFormKey? Topic, uint Flags, uint Type, uint TrailingData,
+    FalloutPackageLocation? StartLocation = null, FalloutPackageLocation? TriggerLocation = null)
 {
     internal static FalloutDialoguePackage Read(FalloutPluginRecord record)
     {
@@ -29,6 +30,7 @@ internal sealed record FalloutDialoguePackage(FalloutFormKey Form, FalloutFormKe
             throw new NotSupportedException("Dialogue package FOV, flags or type is unbound.");
         return new(record.FormKey, record.Plugin.AdjustFormId(BinaryPrimitives.ReadUInt32LittleEndian(target[4..])), distance,
             fov, record.Plugin.AdjustOptionalFormId(BinaryPrimitives.ReadUInt32LittleEndian(data[4..])), flags, type,
-            BinaryPrimitives.ReadUInt32LittleEndian(data[20..]));
+            BinaryPrimitives.ReadUInt32LittleEndian(data[20..]),
+            FalloutPackageLocation.Read(record, "PLDT"), FalloutPackageLocation.Read(record, "PLD2"));
     }
 }

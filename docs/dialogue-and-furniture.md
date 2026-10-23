@@ -20,6 +20,15 @@ speech adapter owns voice/LIP playback and reports response completion. Neither
 presentation owner chooses dialogue branches. Quest/stage/object result command
 coverage is still incomplete, and their execution hosts need further consolidation.
 
+Source dialogue packages own their approach rather than the conversation
+selector. A near-editor start location keeps the actor at the authored placement;
+a near-reference start uses the ordinary travel owner. An authored trigger
+volume (PLD2 near-reference, either its XPRM box or its radius) must receive the
+target before approach begins, and PTDT supplies the activation distance. A
+missing target or an unentered trigger remains a visible wait. The owned Sunny
+audit covers the box trigger, target range, one request and completion; camera,
+head-tracking and target-movement policy remain unbound.
+
 Named XML tile sources resolve within the menu; absent or ambiguous names fail.
 Removed choice subtrees release expression/text/art bindings. Oversized lists
 page through the visible source choices; Up/Down navigation crosses pages.

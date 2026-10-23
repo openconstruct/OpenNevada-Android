@@ -408,6 +408,16 @@ try
         .Concat(Field("IDLF", [5])).Concat(Field("IDLC", [1])).Concat(Field("IDLT", BitConverter.GetBytes(0.75f)))
         .Concat(Field("IDLA", BitConverter.GetBytes(0xa00u))).Concat(Field("POBA", []))
         .Concat(Field("INAM", BitConverter.GetBytes(0xa00u))).ToArray());
+    var dialogueData = new byte[12]; dialogueData[4] = 15;
+    var dialogueStart = new byte[12]; BinaryPrimitives.WriteInt32LittleEndian(dialogueStart, 3);
+    var dialogueTrigger = new byte[12]; BinaryPrimitives.WriteUInt32LittleEndian(dialogueTrigger.AsSpan(4), 0x15d9bau);
+    var dialogueTarget = new byte[16]; BinaryPrimitives.WriteUInt32LittleEndian(dialogueTarget.AsSpan(4), 0x14u);
+    BinaryPrimitives.WriteInt32LittleEndian(dialogueTarget.AsSpan(8), 256);
+    var dialogueMenu = new byte[24]; BinaryPrimitives.WriteSingleLittleEndian(dialogueMenu, 60);
+    var dialoguePackageRecord = Record("PACK", 0xb04, Field("EDID", Encoding.ASCII.GetBytes("ProbeDialogue\0"))
+        .Concat(Field("PKDT", dialogueData)).Concat(Field("PLDT", dialogueStart))
+        .Concat(Field("PLD2", dialogueTrigger)).Concat(Field("PTDT", dialogueTarget))
+        .Concat(Field("PKDD", dialogueMenu)).Concat(Field("PLD2", dialogueTrigger)).ToArray());
     var stringSetting = Record("GMST", 0xc00, Field("EDID", Encoding.ASCII.GetBytes("sProbeChoice\0"))
         .Concat(Field("DATA", Encoding.ASCII.GetBytes("Plugin choice.\0"))).ToArray());
     var nightSchedule = new byte[] { 255, 255, 0, 22, 8, 0, 0, 0 };
@@ -417,7 +427,8 @@ try
     var scheduledActor = Record("NPC_", 0xb03, Field("ACBS", new byte[24])
         .Concat(Field("PKID", BitConverter.GetBytes(0xb01u))).Concat(Field("PKID", BitConverter.GetBytes(0xb02u))).ToArray());
     var bytes = Record("TES4", 0, Field("HEDR", header)).Concat(topic).Concat(group)
-        .Concat(idleRecord).Concat(animationObject).Concat(packageRecord).Concat(stringSetting).Concat(Record("ANIO", 0xa02, []))
+        .Concat(idleRecord).Concat(animationObject).Concat(packageRecord).Concat(dialoguePackageRecord)
+        .Concat(stringSetting).Concat(Record("ANIO", 0xa02, []))
         .Concat(scheduledPackage).Concat(fallbackPackage).Concat(scheduledActor).ToArray();
     File.WriteAllBytes(Path.Combine(directory, "Synthetic.esm"), bytes);
     using var stack = FalloutPluginStack.Load(directory, ["Synthetic.esm"]);
@@ -439,6 +450,13 @@ try
     var package = FalloutScriptPackage.Read(FalloutDialogueTopic.Find(stack, "PACK", "ProbePackage"));
     Require(package.RunInSequence && package.DoOnce && package.IdleTimer == 0.75f &&
         package.Events["POBA"] == package.Idles.Single(), "Package source timing/events differ.");
+    var dialoguePackage = FalloutDialoguePackage.Read(FalloutDialogueTopic.Find(stack, "PACK", "ProbeDialogue"));
+    Require(dialoguePackage.StartLocation is { Type: FalloutPackageLocation.NearEditorLocation, Reference: null, Radius: 0 } &&
+        dialoguePackage.TriggerLocation is { Type: FalloutPackageLocation.NearReference, Radius: 0 } trigger &&
+        trigger.Reference == new FalloutFormKey("Synthetic.esm", 0x15d9ba) &&
+        dialoguePackage.Target == new FalloutFormKey("Synthetic.esm", 0x14) &&
+        dialoguePackage.ActivationDistance == 256,
+        "Dialogue package start/trigger locations or target range differ.");
     var commands = FalloutScriptPackageCommands.Read("; player.addscriptpackage Ignore\nplayer.AddScriptPackage ProbePackage\nplayer.RemoveScriptPackage");
     Require(commands.Count == 2 && commands[0].PackageEditorId == "ProbePackage" && commands[1].PackageEditorId is null,
         "Package commands lost order, comments or removal.");

@@ -64,5 +64,8 @@ Run the owned package check with the ReferenceScriptContractProbe's
 by `--follow <ACRE runtime hex> <PACK runtime hex> [MoveTo reference runtime hex]`
 for the isolated motion check. NativeAccompanyAudit accepts owned Data followed by
 `<ACRE runtime hex> <PACK runtime hex>` for the open-floor Accompany distance and
-cold-pose check; it does not establish ordinary recruitment or target selection. The optional reference uses the real MoveTo owner
+cold-pose check. NativeCheyenneAccompanyAudit loads the saloon cell, creates the
+actual Sunny target node and Cheyenne, verifies source package selection and
+follows the authored 128-unit distance on a synthetic floor. Neither establishes
+ordinary recruitment, ordinary cell streaming or retail behavior. The optional reference uses the real MoveTo owner
 before admission, so a relocated actor uses its current cell's encounter policy.

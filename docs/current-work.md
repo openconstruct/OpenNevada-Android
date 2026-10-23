@@ -56,8 +56,11 @@ procedure, and creature package selection admits source Accompany (PACK type 7)
 through the existing continuous pursuit motion owner. The synthetic
 Follow/Accompany contract and owned companion-package probe pass. The isolated
 NativeAccompanyAudit passes for Cheyenne's `FalloutNV.esm:152afa` package with
-source distance 128 units, open-floor pursuit, stop and cold pose; it does not
-prove ordinary recruitment, target selection or the saloon scene. Cheyenne's
+source distance 128 units, open-floor pursuit, stop and cold pose. The separate
+saloon selection audit loads the actual Sunny target node, verifies Cheyenne
+selects `152afa` through the source package list and condition 84, and follows
+the authored 128-unit distance; it does not prove ordinary recruitment or
+ordinary cell streaming. Cheyenne's
 `152afa/84` condition and procedure 7 no longer fault at admission. NPC Accompany
 procedures and all start/end-location variants remain explicit failures. APK
 0.1.22/code 23 is built, exported and v2/v3 signature checked but not installed
@@ -270,6 +273,8 @@ profile collectors stopped; any current collector must be stopped after testing.
 ## Verification and next owners
 
 Accompany native audit: work/opennv-cheyenne-accompany.log (PASS)
+Accompany saloon selection audit: work/opennv-cheyenne-scene-accompany.log (PASS)
+Accompany scene gate: work/opennv-cheyenne-scene-runtime-gate.log (PASS)
 Accompany owned/synthetic probes: work/opennv-cheyenne-contracts.log (PASS)
 Accompany gate: work/opennv-cheyenne-runtime-gate.log (PASS)
 Accompany export: work/opennv-cheyenne-export.log (PASS)

@@ -14,13 +14,16 @@ internal static class FollowPackageContracts
         {
             var header = new byte[12]; BinaryPrimitives.WriteSingleLittleEndian(header, 1.34f);
             File.WriteAllBytes(Path.Combine(directory, "Follow.esm"), Join(Record("TES4", 0, Field("HEDR", header)),
-                Package(1, 330), Package(2, 500), Package(3, 330, location: true), Package(4, 0), Package(5, 330, targetType: 1)));
+                Package(1, 330), Package(2, 500), Package(3, 330, location: true), Package(4, 0), Package(5, 330, targetType: 1),
+                Package(6, 128, procedure: 7)));
             using var records = FalloutPluginStack.Load(directory, ["Follow.esm"]);
             FalloutPluginRecord Source(uint id) => records.GetEffective(new("Follow.esm", id));
             var shortFollow = FalloutFollowPackage.Read(Source(1));
+            var accompany = FalloutFollowPackage.Read(Source(6));
             if (shortFollow.Target != new FalloutFormKey("Follow.esm", 0x14) || shortFollow.Distance != 330 ||
+                shortFollow.Procedure != 1 || accompany.Procedure != 7 || accompany.Distance != 128 ||
                 FalloutFollowPackage.Read(Source(2)).Distance != 500 || FalloutScriptPackage.Read(Source(1)).LocationType is not null)
-                throw new InvalidOperationException("Follow invented a start location or lost its target/distance.");
+                throw new InvalidOperationException("Follow/Accompany invented a start location or lost its target/distance.");
             Reject(() => FalloutFollowPackage.Read(Source(3)));
             Reject(() => FalloutFollowPackage.Read(Source(4)));
             Reject(() => FalloutFollowPackage.Read(Source(5)));
@@ -34,14 +37,14 @@ internal static class FollowPackageContracts
             Reject(() => (motion with { Rotation = [0, 0, 0, 0] }).Validate());
             Reject(() => (motion with { StartPending = true }).Validate());
             Reject(() => (motion with { PackageSha256 = "changed" }).Validate());
-            Console.WriteLine("OPENNV_FOLLOW_PACKAGE_CONTRACT_PASS optionalStart=true sourceTarget=true distances=true coldClock=true malformedRejected=true");
+            Console.WriteLine("OPENNV_FOLLOW_PACKAGE_CONTRACT_PASS optionalStart=true sourceTarget=true accompany=true distances=true coldClock=true malformedRejected=true");
         }
         finally { Directory.Delete(directory, true); }
     }
 
-    private static byte[] Package(uint id, int distance, bool location = false, int targetType = 0)
+    private static byte[] Package(uint id, int distance, bool location = false, int targetType = 0, byte procedure = 1)
     {
-        var data = new byte[12]; data[4] = 1; data[11] = 0xa5;
+        var data = new byte[12]; data[4] = procedure; data[11] = 0xa5;
         var target = new byte[16]; BinaryPrimitives.WriteInt32LittleEndian(target, targetType);
         BinaryPrimitives.WriteUInt32LittleEndian(target.AsSpan(4), 0x14);
         BinaryPrimitives.WriteInt32LittleEndian(target.AsSpan(8), distance); target[15] = 0xcc;
